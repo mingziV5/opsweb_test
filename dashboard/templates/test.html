@@ -1,0 +1,12 @@
+<html>
+<H1>HTML 文件 </H1>
+<H4>parameter: {{ name }}</H4>
+<form method='post'>
+{%csrf_token%}
+<ul>
+    <li>用户名：<input type='text' name='username'/></li>
+    <li>密码：<input type='password' name='password'/></li>
+    <input type='submit'>
+</ul>
+</form>
+</html>

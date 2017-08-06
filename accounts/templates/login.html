@@ -1,0 +1,11 @@
+<html>
+<H1>login </H1>
+<form method='post'>
+{%csrf_token%}
+<ul>
+    <li>用户名：<input type='text' name='username'/></li>
+    <li>密码：<input type='password' name='password'/></li>
+    <input type='submit'>
+</ul>
+</form>
+</html>

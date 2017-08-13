@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.template import Context, loader
 from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView
 # login_required 默认会跳转到/accounts/login/ 可以在settings文件中修改LOGIN_URL来修改，后面还会加上你请求的url作为next的参数，做登陆跳转
 # Create your views here.
 
@@ -46,3 +47,12 @@ def index(request):
 @login_required
 def index(request):
     return render(request, 'index.html')
+
+
+def key_world_test(request, *args, **kwargs):
+    print (args)
+    print (kwargs)
+    return HttpResponse('OK')
+    
+class IndexView(TemplateView):
+    template_name = 'index.html'

@@ -1,0 +1,38 @@
+{% extends 'public/layout.html' %}
+
+{% block body %}
+    <table class='table table-striped'>
+        <tr>
+            <th>序号</th>
+            <th>用户名</th>
+            <th>email</th>
+        </tr>
+        {% for user_obj in page_obj.object_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ user_obj.username }}</td>
+            <td>{{ user_obj.email }}</td>
+        </tr>
+        {% endfor%}
+    </table>
+    <div>
+        <ul class='pagination'>
+            <li><a href='{% url 'user_list' %}?page=1'>首页</a></li>
+            {% if page_obj.has_previous %}
+            <li><a href='{% url 'user_list' %}?page={{ page_obj.pervious_page_number }}'>上一页</a></li>
+            {% endif %}
+            {% for p in page_obj.paginator.page_range %}
+                {% if p == page_obj.number %}
+                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% else %}
+                <li><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li><a href='{% url 'user_list' %}?page={{ page_obj.next_page_number }}'>下一页</a></li>
+            {% endif %}
+            <li><a href='{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}'>末页</a></li>
+        </ul>
+    </div>
+
+{% endblock %}

@@ -2,6 +2,11 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.views.generic import View, TemplateView, ListView
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.core.paginator import Paginator
 # Create your views here.
 def user_login(request):
     if request.method == 'GET':
@@ -24,3 +29,58 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse("user_login"))
+
+'''
+def user_list_view(request):
+    user_queryset = User.objects.all()
+    for user in user_queryset:
+        print (user.username, user.email)
+    return render(request, 'user/userlist.html', {'userlist': user_queryset})
+'''
+
+class UserListView(View):
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        user_queryset = User.objects.all()
+        return render(request, 'user/userlist.html', {'userlist': user_queryset})
+
+class TplUserListView(TemplateView):
+    template_name = 'user/userlist.html'
+    counts = 10
+
+    def get_context_data_back(self, **kwargs):
+        context = super(TplUserListView, self).get_context_data(**kwargs)
+        users = User.objects.all()
+        try:
+            page = int(self.request.GET.get('page', 1))
+        except:
+            page = 1
+        end = self.counts*page
+        start = end - self.counts
+        context['userlist'] = users[start:end]
+        return context
+
+    def hello():
+        return 'hello'
+
+    def get_context_data(self, **kwargs):
+        context = super(TplUserListView, self).get_context_data(**kwargs)
+        try:
+            page = int(self.request.GET.get('page', 1))
+        except:
+            page = 1
+        user_list = User.objects.all()
+        paginator = Paginator(user_list, self.counts)
+        context['page_obj'] = paginator.page(page)
+        return context
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        page = request.GET.get('page', None)
+        print(page)
+        return super(TplUserListView, self).get(request, *args, **kwargs) 
+
+class LUserListView(ListView):
+    template_name = 'user/userlist.html'
+    model = User
+    paginate_by = 8

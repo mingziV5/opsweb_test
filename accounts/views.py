@@ -48,20 +48,17 @@ class TplUserListView(TemplateView):
     template_name = 'user/userlist.html'
     counts = 10
 
-    def get_context_data_back(self, **kwargs):
-        context = super(TplUserListView, self).get_context_data(**kwargs)
-        users = User.objects.all()
-        try:
-            page = int(self.request.GET.get('page', 1))
-        except:
-            page = 1
-        end = self.counts*page
-        start = end - self.counts
-        context['userlist'] = users[start:end]
-        return context
-
-    def hello():
-        return 'hello'
+    # def get_context_data_back(self, **kwargs):
+    #     context = super(TplUserListView, self).get_context_data(**kwargs)
+    #     users = User.objects.all()
+    #     try:
+    #         page = int(self.request.GET.get('page', 1))
+    #     except:
+    #         page = 1
+    #     end = self.counts*page
+    #     start = end - self.counts
+    #     context['userlist'] = users[start:end]
+    #     return context
 
     def get_context_data(self, **kwargs):
         context = super(TplUserListView, self).get_context_data(**kwargs)
@@ -71,7 +68,18 @@ class TplUserListView(TemplateView):
             page = 1
         user_list = User.objects.all()
         paginator = Paginator(user_list, self.counts)
+        if page < 8:
+            start_page = 0
+            end_page = page + 7
+        elif page >= 8 and page <= paginator.num_pages - 8:
+            start_page = page - 8
+            end_page = page + 7
+        elif page > paginator.num_pages -8:
+            start_page = page - 8
+            end_page = paginator.num_pages
+        page_range_obj = paginator.page_range[start_page:end_page]
         context['page_obj'] = paginator.page(page)
+        context['page_range_obj'] = page_range_obj
         return context
 
     @method_decorator(login_required)
@@ -84,3 +92,9 @@ class LUserListView(ListView):
     template_name = 'user/userlist.html'
     model = User
     paginate_by = 8
+
+class LoginRequiredMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponseRedirect(reverse('user_login'))
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)

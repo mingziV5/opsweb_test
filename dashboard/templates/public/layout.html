@@ -99,7 +99,7 @@ button.detail{
 	    <ul class="dropdown-menu">
 		<li><a href="#"><i class="fa fa-user fa-fw"></i>个人中心</a></li>
 		<li class="divider"></li>
-		<li><a href="#"><i class="fa fa-mail-forward fa-fw"></i>退出登录</a></li>
+		<li><a href="{% url 'user_logout' %}"><i class="fa fa-mail-forward fa-fw"></i>退出登录</a></li>
 	    </ul>
 	</li>
 	<li><a href="{% url 'user_logout' %}"><i class="fa fa-mail-forward fa-fw" ></i><span>退出登录</span></a></li>

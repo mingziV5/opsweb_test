@@ -19,7 +19,7 @@
         <ul class='pagination'>
             <li><a href='{% url 'user_list' %}?page=1'>首页</a></li>
             {% if page_obj.has_previous %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.pervious_page_number }}" >上一页</a></li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}" >上一页</a></li>
             {% else %}
             <li><a>上一页</a></li>
             {% endif %}

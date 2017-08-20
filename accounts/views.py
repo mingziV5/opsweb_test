@@ -80,6 +80,7 @@ class TplUserListView(TemplateView):
         page_range_obj = paginator.page_range[start_page:end_page]
         context['page_obj'] = paginator.page(page)
         context['page_range_obj'] = page_range_obj
+        print(context)
         return context
 
     @method_decorator(login_required)

@@ -1,42 +1,200 @@
 {% extends 'public/layout.html' %}
 
+{% block breadcrumb %}
+<li><a href="#">用户管理</a><span class="divider"></span></li>
+<li class="active">用户列表</li>
+{% endblock %}
+
 {% block body %}
     <table class='table table-striped'>
         <tr>
             <th>序号</th>
             <th>用户名</th>
-            <th>email</th>
+            <th>状态</th>
+            <th>邮箱</th>
+            <th>操作</th>
         </tr>
         {% for user_obj in page_obj.object_list %}
         <tr>
             <td>{{ forloop.counter }}</td>
             <td>{{ user_obj.username }}</td>
+            <td class="status">
+                {% if user_obj.is_active  %}
+                    <span class="glyphicon glyphicon-ok-circle text-success" ></span>正常
+                {% else %}
+                    <span class="glyphicon glyphicon-warning-sign text-warning" ></span>禁止
+                {% endif %}
+            </td>
             <td>{{ user_obj.email }}</td>
+            <td>
+                <div class="btn-group">
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                            修改
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
+                            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
+                            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
+                            <li role="presentation"><a role="menuitem" tabindex="-1" href="#" data='{"uid": "{{ user_obj.id }}", "username": "{{ user_obj.username }}" }' class="user_to_group">添加到指定组</a></li>
+                        </ul>
+                    </div>
+                    {% if user_obj.is_active %}
+                        <button type="button" class="btn btn-sm btn-warning modify_user_status" status={{ user_obj.is_active|lower  }} data="{{ user_obj.id }}">禁用</button>
+                    {% else %}
+                        <button type="button" class="btn btn-info btn-sm modify_user_status" status={{ user_obj.is_active|lower }} data="{{ user_obj.id  }}">开启</button>
+                    {% endif %}
+                </div>
+
+            </td>
         </tr>
         {% endfor%}
     </table>
-    <div>
-        <ul class='pagination'>
-            <li><a href='{% url 'user_list' %}?page=1'>首页</a></li>
-            {% if page_obj.has_previous %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}" >上一页</a></li>
-            {% else %}
-            <li><a>上一页</a></li>
-            {% endif %}
-            {% for p in page_range_obj %}
-                {% if p == page_obj.number %}
-                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+
+    <center>
+        <div>
+            <ul class='pagination center-block'>
+                <li><a href='{% url 'user_list' %}?page=1'>首页</a></li>
+                {% if page_obj.has_previous %}
+                <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}" >上一页</a></li>
                 {% else %}
-                <li><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                <li><a>上一页</a></li>
                 {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <li><a href='{% url 'user_list' %}?page={{ page_obj.next_page_number }}'>下一页</a></li>
-            {% else %}
-            <li><a>下一页</a></li>
-            {% endif %}
-            <li><a href='{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}'>末页</a></li>
-        </ul>
+                {% for p in page_range_obj %}
+                    {% if p == page_obj.number %}
+                    <li class='active'><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                    {% else %}
+                    <li><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li><a href='{% url 'user_list' %}?page={{ page_obj.next_page_number }}'>下一页</a></li>
+                {% else %}
+                <li><a>下一页</a></li>
+                {% endif %}
+                <li><a href='{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}'>末页</a></li>
+            </ul>
+        </div>
+    </center>
+
+    <div class="modal fade" id="user_to_group_modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 id="user_to_group_modal_title"></h4>
+                </div>
+                <div class="modal-body clearfix">
+                    <div class="col-xs-8" id="select_service_id">
+                        <select class="chosen-select chosen-transparent form-control" id="all_user_group">
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="user_to_group_btn">提交</button>
+                </div>
+                <div class="modal-footer">
+
+                    <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+                </div>
+
+            </div>
+        </div>
     </div>
 
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        function change_user_status(status_td_obj, status) {
+            if (status == "true"){
+                status_td_obj.html('<span class="glyphicon glyphicon-warning-sign text-warning" ></span>禁止')
+            }else{
+                status_td_obj.html('<span class="glyphicon glyphicon-ok-circle text-success" ></span>正常')
+            }
+        }
+
+        // 第一步：找到修改用户状态的按钮，然后绑定一个点击事件
+        $(".modify_user_status").click(function(){
+            // 第二步：获取当前点击的是哪个用户，得知道用户id
+            var click_obj = $(this);
+            var uid = click_obj.attr("data");
+            var status = click_obj.attr('status');
+            // 第三步：发起ajax请求，修改用户状态
+            $.ajax({
+                url: "{% url 'user_modify_status' %}",
+                type: "post",
+                data: {"uid": uid},
+                success: function (res) {
+                    if (res.status == 0){
+                        if (status == "true"){
+                            click_obj.attr("status", "false").text("开启");
+                            click_obj.removeClass("btn-warning").addClass("btn-info");
+                        }else{
+                            click_obj.attr("status", "true").text("禁用");
+                            click_obj.removeClass("btn-info").addClass("btn-warning");
+                        }
+                        status_obj = click_obj.parents("td").siblings(".status")
+                        change_user_status(status_obj, status)
+                    }else{
+                        swal("操作失败", res.errmsg, "error");
+                    }
+
+                },
+                beforeSend: function (xhr, settings) {
+                    var csrftoken = getCookie('csrftoken');
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                    }
+                }
+            })
+            // 第四步：修改围标状态，按钮状态
+        })
+        //将用户可选组添加到select
+        $(function(){
+            var uid
+            var user_group_url = "{% url 'user_modify_group' %}"
+            $(".user_to_group").click(function(){
+                var data = $.parseJSON($(this).attr("data"))
+                uid = data.uid
+                $("#user_to_group_modal_title").html("将用户 <b>" + data.username + "</b> 添加到指定组里")
+                $("#user_to_group_modal").modal("show")
+                $.get(user_group_url, {'uid': uid}, function(res){
+                    html = "<option value=0 >请选择用户组</option>";
+                    $.each(res, function(index, value){
+                        html += '<option value="'+ value.id +'"> '+ value.name+'</option>'
+                    })
+                    $("#all_user_group").html(html)
+                    //$("#all_user_group_chosen").css('width', '100%')
+                    $("#all_user_group").trigger("chosen:updated")
+                })
+            })
+
+            $("#user_to_group_btn").click(function(){
+                var groupid = $("#all_user_group").val()
+                $("#user_to_group_modal").modal('hide');
+                $.ajax({
+                    url: user_group_url,
+                    type: "put",
+                    data: {"uid": uid, 'gid': groupid},
+                    success: function(res){
+                        if (res.status != 0){
+                            swal("操作失败", res.errmsg, "error")
+                        } else {
+                            swal("操作成功", '', 'success')
+                        }
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                })
+            })
+        })
+
+
+    </script>
 {% endblock %}

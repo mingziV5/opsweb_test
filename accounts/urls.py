@@ -1,5 +1,5 @@
 from django.conf.urls import include, url
-from . import views, user
+from . import views, user, group
 
 urlpatterns = [
     #views
@@ -19,4 +19,15 @@ urlpatterns = [
     #list类视图
     #url(r'user/list/', views.LUserListView.as_view(), name='user_list'),
     #url(r'user/list/', user.UserListView.as_view(), name='user_list'),
+    url(r'^user/', include([
+        url(r'^modify/', include([
+            url(r'^status/$', user.views.ModifyUserStatusView.as_view(), name='user_modify_status'),
+            url(r'^group/$', user.views.ModifyUserGroupView.as_view(), name='user_modify_group'),
+        ]))
+    ])),
+
+    url(r'^group/', include([
+        url(r'^$', group.views.GroupListView.as_view(), name='group_list'),
+        url(r'^create/$', group.views.GroupCreateView.as_view(), name='group_create'),
+    ])),
 ]

@@ -1,10 +1,11 @@
-from django.views.generic import View, TemplateView
+from django.views.generic import View, TemplateView, ListView
 from django.contrib.auth import authenticate, login, logout
 from django.http.response import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.http import QueryDict
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class UserLoginView(View):
     def post(self, request, *args, **kwargs):
@@ -52,6 +53,34 @@ class UserlogoutTplView(TemplateView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return HttpResponseRedirect(reverse('user_login'))
+
+class UserListView(LoginRequiredMixin, ListView):
+    template_name = 'user/userlist.html'
+    model = User
+    paginate_by = 10
+    before_range_num = 4
+    after_range_num = 5
+    
+    def get_queryset(self):
+        queryset = super(UserListView, self).get_queryset()
+        queryset = queryset.filter(is_superuser=False)
+        return queryset
+
+    def get_page_range(self, page_obj):
+        current_index = page_obj.number
+        start = current_index - self.before_range_num
+        end = current_index + self.after_range_num
+        if start <= 0:
+            start = 1
+        if end > page_obj.paginator.num_pages:
+            end = page_obj.paginator.num_pages
+        return range(start, end)
+    
+    def get_context_data(self, **kwargs):
+        context = super(UserListView, self).get_context_data(**kwargs)
+        context['page_range_obj'] = self.get_page_range(context['page_obj'])
+        return context
+
 
 class ModifyUserStatusView(View):
     def post(self, request):

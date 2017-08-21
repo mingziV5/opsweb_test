@@ -15,7 +15,7 @@ urlpatterns = [
     #类视图，as_view()方法
     #url(r'user/list/$', views.UserListView.as_view(), name='user_list'),
     #模板类视图
-    url(r'user/list/', views.TplUserListView.as_view(), name='user_list'),
+    url(r'user/list/', user.views.UserListView.as_view(), name='user_list'),
     #list类视图
     #url(r'user/list/', views.LUserListView.as_view(), name='user_list'),
     #url(r'user/list/', user.UserListView.as_view(), name='user_list'),

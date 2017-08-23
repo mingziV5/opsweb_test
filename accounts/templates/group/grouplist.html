@@ -177,6 +177,53 @@
 
         delMemberById()
 
+        $('.del_group').click(function(){
+            var gid = $(this).attr('groupid')
+            swal({
+                title: '确认删除',
+                text: '删除后数据无法还原',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                closeOnConfirm: false,
+                closeOnCancel: false
+            },
+                function(isConfirm){
+                    if (isConfirm) {
+                        $.ajax({
+                            url: "{% url 'group_del' %}",
+                            type: 'delete',
+                            data: {'gid': gid},
+                            success: function (res) {
+                                if (res.status != 0) {
+                                    swal("操作失败", res.errmsg, "error")
+                                } else {
+                                    swal({
+                                        "title": "用户组删除成功",
+                                        "text": "",
+                                        "type": "success"
+                                    }, function () {
+                                        setTimeout(function () {
+                                            window.location.reload();
+                                        }, 100)
+
+                                    });
+                                }
+                            },
+                            beforeSend: function (xhr, settings) {
+                                var csrftoken = getCookie('csrftoken');
+                                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                                }
+                            }
+                        })
+                    } else {
+                        swal("取消", "取消成功", "error")
+                    }
+                }
+            )
+        })
 
 
 

@@ -9,7 +9,7 @@ class GroupListView(ListView):
     template_name = "group/grouplist.html"
     model = Group
 
-class GroupCreateView(View):
+class ModifyGroupView(View):
 
     def post(self, request):
         group_name = request.POST.get('name', None)
@@ -29,6 +29,30 @@ class GroupCreateView(View):
             response['status'] = 1
             response['errmsg'] = '添加用户组失败'
         return JsonResponse(response)
+
+    def delete(self, request):
+        response = {'status': 0}
+        data = QueryDict(request.body)
+        gid = data.get('gid', None)
+        if not gid:
+            response['status'] = 1
+            response['errmsg'] = 'gid不能为空'
+            return JsonResponse(response)
+        group_obj = Group.objects.get(id=gid)
+        if group_obj.user_set.all().count() != 0:
+            response['status'] = 1
+            response['errmsg'] = '不能删除，组内还有成员'
+            return JsonResponse(response)
+        try:
+            group_obj.delete()
+            response['status'] == 0
+            return JsonResponse(response)
+        except:
+            print(traceback.format_exc())
+            response['status'] == 1
+            response['errmsg'] == '删除组出错'
+            return JsonResponse(response)
+
 
 class GroupMemberListView(View):
 

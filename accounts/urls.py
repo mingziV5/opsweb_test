@@ -29,5 +29,10 @@ urlpatterns = [
     url(r'^group/', include([
         url(r'^$', group.views.GroupListView.as_view(), name='group_list'),
         url(r'^create/$', group.views.GroupCreateView.as_view(), name='group_create'),
+        url(r'^member/', include([
+            url(r'^get/$', group.views.GroupMemberListView.as_view(), name='group_members'),
+            url(r'^del/$', group.views.GroupMemberListView.as_view(), name='group_members_del'),
+        ]))
+
     ])),
 ]

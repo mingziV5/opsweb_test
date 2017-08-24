@@ -124,24 +124,24 @@
         })
 
         function getMemberList(gid){
-                var group_members_url = "{% url 'group_members' %}"
-                var users_in_group_modal = $("#users_in_group_modal")
-                users_in_group_modal.modal("show")
-                $.get(group_members_url, {'gid': gid}, function(res){
-                    if (res.status != 0){
-                        swal("操作失败", res.errmsg, "error")
-                    } else {
-                        var html = '<div class="col-xs-8"><h4>用户名</h4></div>'
-                        html += '<div class="col-xs-4"><h4>操作</h4></div>'
-                        $.each(res.list_members, function(index, value){
-                            html += '<div class="row" style="margin-bottom: 6px">'
-                            html += '<div class="col-xs-8"><h4>'+ value.username +'</h4></div>'
-                            html += '<div class="col-xs-4"><button type="button" class="btn btn-danger btn-sm del_member" uid="'+ value.id +'" gid="' + gid + '">删除</button></div>'
-                            html += '</div>'
-                        })
-                        $("#user_in_group_body").html(html)
-                    }
-                })
+            var group_members_url = "{% url 'group_members' %}"
+            var users_in_group_modal = $("#users_in_group_modal")
+            users_in_group_modal.modal("show")
+            $.get(group_members_url, {'gid': gid}, function(res){
+                if (res.status != 0){
+                    swal("操作失败", res.errmsg, "error")
+                } else {
+                    var html = '<div class="col-xs-8"><h4>用户名</h4></div>'
+                    html += '<div class="col-xs-4"><h4>操作</h4></div>'
+                    $.each(res.list_members, function(index, value){
+                        html += '<div class="row" style="margin-bottom: 6px">'
+                        html += '<div class="col-xs-8"><h4>'+ value.username +'</h4></div>'
+                        html += '<div class="col-xs-4"><button type="button" class="btn btn-danger btn-sm del_member" uid="'+ value.id +'" gid="' + gid + '">删除</button></div>'
+                        html += '</div>'
+                    })
+                    $("#user_in_group_body").html(html)
+                }
+            })
         }
 
         $(".users_in_group").click(function(){
@@ -149,36 +149,9 @@
             getMemberList(gid)
         })
 
-        function delMemberById(){
-            $("#user_in_group_body").on('click', '.del_member', function(){
-            //$(".del_member").click(function(){
-                var uid = $(this).attr('uid')
-                var gid = $(this).attr('gid')
-                $.ajax({
-                    url: "{% url 'group_members_del' %}",
-                    type: 'delete',
-                    data: {'gid': gid, 'uid': uid},
-                    success: function(res){
-                        if(res.status != 0){
-                            swal("操作失败", res.errmsg, "error")
-                        } else {
-                            getMemberList(gid)
-                        }
-                    },
-                    beforeSend: function (xhr, settings) {
-                        var csrftoken = getCookie('csrftoken');
-                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
-                        }
-                    }
-                })
-            })
-        }
 
-        delMemberById()
 
-        function swalDel(ajaxFunction){
-            console.log('swalDel')
+        function swalDel(ajaxFunction, myData){
             swal({
                 title: '确认删除',
                 text: '删除后数据无法还原',
@@ -190,9 +163,8 @@
                 closeOnCancel: false
             },
                 function(isConfirm){
-                    if (isConfirm) {
-                        //ajaxFunction(myData)
-                        swal("成功")
+                    if (isConfirm){
+                        ajaxFunction(myData)
                     } else {
                         swal("取消", "取消成功", "error")
                     }
@@ -200,7 +172,7 @@
             )
         }
 
-        function ajaxGroupDel(gid){
+        function ajaxDelGroup(gid){
             $.ajax({
                 url: "{% url 'group_del' %}",
                 type: 'delete',
@@ -230,11 +202,84 @@
             })
         }
 
+        /*
+        javascript 带参数的函数 给参数赋值时就会执行
+        删除用户组
+        */
         $('.del_group').click(function(){
             var gid = $(this).attr('groupid')
-            swalDel(ajaxGroupDel(gid))
+            swalDel(ajaxDelGroup, gid)
         })
 
+        function ajaxDelMemberById(myData){
+            $.ajax({
+                url: "{% url 'group_members_del' %}",
+                type: 'delete',
+                data: {'gid': myData.gid, 'uid': myData.uid},
+                success: function(res){
+                    if(res.status != 0){
+                        swal("操作失败", res.errmsg, "error")
+                    } else {
+                        //myData.myFunction(myData.gid)
+                        swal({
+                            "title": "删除成员成功",
+                            "text": "",
+                            "type": "success"
+                        }, function(){
+                            myData.myFunction(myData.gid)
+                        })
+                    }
+                },
+                beforeSend: function (xhr, settings) {
+                    var csrftoken = getCookie('csrftoken');
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                    }
+                }
+            })
+        }
+
+        /*
+        删除组内用户
+         */
+        $("#user_in_group_body").on('click', '.del_member', function(){
+            var uid = $(this).attr('uid')
+            var gid = $(this).attr('gid')
+            swalDel(ajaxDelMemberById, {'gid': gid, 'uid': uid, 'myFunction': getMemberList})
+            //getMemberList(gid)
+        })
+
+
+
+        /*
+        function delMemberById(){
+            $("#user_in_group_body").on('click', '.del_member', function(){
+            //$(".del_member").click(function(){
+                var uid = $(this).attr('uid')
+                var gid = $(this).attr('gid')
+                $.ajax({
+                    url: "url 'group_members_del'",
+                    type: 'delete',
+                    data: {'gid': gid, 'uid': uid},
+                    success: function(res){
+                        if(res.status != 0){
+                            swal("操作失败", res.errmsg, "error")
+                        } else {
+                            getMemberList(gid)
+                        }
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                })
+            })
+        }
+
+        delMemberById()
+        */
 
         /*
         $('.del_group').click(function(){
@@ -252,7 +297,7 @@
                 function(isConfirm){
                     if (isConfirm) {
                         $.ajax({
-                            url: "{% url 'group_del' %}",
+                            url: "url 'group_del'",
                             type: 'delete',
                             data: {'gid': gid},
                             success: function (res) {
@@ -285,8 +330,6 @@
             )
         })
         */
-
-
 
     </script>
 {% endblock %}

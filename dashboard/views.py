@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template import Context, loader
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
+from django.urls import reverse
 # login_required 默认会跳转到/accounts/login/ 可以在settings文件中修改LOGIN_URL来修改，后面还会加上你请求的url作为next的参数，做登陆跳转
 # Create your views here.
 
@@ -56,3 +57,36 @@ def key_world_test(request, *args, **kwargs):
     
 class IndexView(TemplateView):
     template_name = 'index.html'
+
+class SuccessView(TemplateView):
+    template_name = "public/success.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(SuccessView, self).get_context_data(**kwargs)
+        success_name = self.kwargs.get("next", "")
+
+        next_url = "/"
+        try:
+            next_url = reverse(success_name)
+        except:
+            pass
+
+        context['next_url'] = next_url
+        return context
+
+class ErrorView(TemplateView):
+    template_name = "public/error.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ErrorView, self).get_context_data(**kwargs)
+        error_name = self.kwargs.get("next", "")
+        errmsg = self.kwargs.get('msg', "")
+        next_url = "/"
+        try:
+            next_url = reverse(error_name)
+        except:
+            pass
+        context['next_url'] = next_url
+        context['errmsg'] = errmsg
+        return context
+

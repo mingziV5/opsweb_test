@@ -6,6 +6,16 @@
 {% endblock %}
 
 {% block body %}
+    <caption>
+        <form class="form-inline" action="{% url 'user_search' %}">
+          <div class="form-group">
+            <div class="input-group">
+              <input type="text" name="username" value="{{ search_username }}" class="form-control" >
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+    </caption>
     <table class='table table-striped'>
         <tr>
             <th>序号</th>
@@ -54,9 +64,9 @@
 
     <div class="center-block">
         <ul class='pagination center-block'>
-            <li><a href='{% url 'user_list' %}?page=1'>首页</a></li>
+            <li><a href="{% url 'user_list' %}?page=1">首页</a></li>
             {% if page_obj.has_previous %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}" >上一页</a></li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
             {% else %}
             <li><a>上一页</a></li>
             {% endif %}
@@ -68,11 +78,11 @@
                 {% endif %}
             {% endfor %}
             {% if page_obj.has_next %}
-            <li><a href='{% url 'user_list' %}?page={{ page_obj.next_page_number }}'>下一页</a></li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
             {% else %}
             <li><a>下一页</a></li>
             {% endif %}
-            <li><a href='{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}'>末页</a></li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
         </ul>
     </div>
 

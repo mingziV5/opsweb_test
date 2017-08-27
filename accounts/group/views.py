@@ -22,6 +22,8 @@ class ModifyGroupView(View):
             group = Group(name=group_name)
             group.save()
             response['status'] = 0
+            response['group_id'] = group.id
+            response['group_name'] = group.name
         except IntegrityError:
             response['status'] =1
             response['errmsg'] = '用户组以存在'
@@ -64,8 +66,12 @@ class GroupMemberListView(View):
             response['errmsg'] = 'gid不能为空'
             return JsonResponse(response)
         try:
+            #查询用户组内成员
+            #1
             group_obj = Group.objects.get(id=gid)
             members = group_obj.user_set.all()
+            #2
+            #User.objects.all().filter(用户组=组id)
             list_members = list(members.values('id', 'username'))
             response['status'] = 0
             response['list_members'] = list_members
@@ -91,6 +97,8 @@ class GroupMemberListView(View):
             user_obj = User.objects.get(id=uid)
             group_obj = Group.objects.get(id=gid)
             user_obj.groups.remove(group_obj)
+            #通过组删除用户
+            #group_obj.user_set.remove(user_obj)
             return JsonResponse(response)
 
         except:

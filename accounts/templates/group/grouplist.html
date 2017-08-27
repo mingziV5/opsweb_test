@@ -11,16 +11,16 @@
             <th>操作</th>
         </tr>
         {% for group_obj in object_list %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ group_obj.name }}</td>
-                <td>
-                    <button type="button" class="btn btn-primary btn-sm users_in_group" groupid="{{ group_obj.id }}">成员列表</button>
-                    <button type="button" class="btn btn-success btn-sm" >查看权限</button>
-                    <a  class="btn btn-info btn-sm" href="#">修改权限</a>
-                    <button type="button" class="btn btn-danger btn-sm del_group" groupid="{{ group_obj.id }}">删除</button>
-                </td>
-            </tr>
+        <tr>
+            <td>{{ group_obj.id }}</td>
+            <td>{{ group_obj.name }}</td>
+            <td>
+                <button type="button" class="btn btn-primary btn-sm users_in_group" groupid="{{ group_obj.id }}">成员列表</button>
+                <button type="button" class="btn btn-success btn-sm" >查看权限</button>
+                <a  class="btn btn-info btn-sm" href="#">修改权限</a>
+                <button type="button" class="btn btn-danger btn-sm del_group" groupid="{{ group_obj.id }}">删除</button>
+            </td>
+        </tr>
         {% endfor %}
     </table>
 
@@ -102,9 +102,13 @@
                                 "text": "",
                                 "type": "success"
                             }, function(){
-                                setTimeout(function(){
-                                    window.location.reload();
-                                },100)
+                                //setTimeout(function(){window.location.reload();},100)
+                                html = '<tr><td>' + res.group_id + ' </td><td>' + res.group_name + '</td>'
+                                html += '<td><button type="button" class="btn btn-primary btn-sm users_in_group" groupid="' + res.group_id + '">成员列表</button>'
+                                html += '<button type="button" class="btn btn-success btn-sm" >查看权限</button>'
+                                html += '<a  class="btn btn-info btn-sm" href="#">修改权限</a>'
+                                html += '<button type="button" class="btn btn-danger btn-sm del_group" groupid="' + res.group_id + '">删除</button></td></tr>'
+                                $(".table").append(html)
 
                             });
                         }else{
@@ -172,11 +176,11 @@
             )
         }
 
-        function ajaxDelGroup(gid){
+        function ajaxDelGroup(myData){
             $.ajax({
                 url: "{% url 'group_del' %}",
                 type: 'delete',
-                data: {'gid': gid},
+                data: {'gid': myData.gid},
                 success: function (res) {
                     if (res.status != 0) {
                         swal("操作失败", res.errmsg, "error")
@@ -186,10 +190,10 @@
                             "text": "",
                             "type": "success"
                         }, function () {
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 100)
-
+                            //setTimeout(function () {window.location.reload();}, 100)
+                            //var click_obj = $(this)
+                            //click_obj.parents("tr").remove();
+                            myData.click_obj.parents("tr").remove();
                         });
                     }
                 },
@@ -207,8 +211,9 @@
         删除用户组
         */
         $('.del_group').click(function(){
+            var click_obj = $(this)
             var gid = $(this).attr('groupid')
-            swalDel(ajaxDelGroup, gid)
+            swalDel(ajaxDelGroup, {'gid':gid, 'click_obj':click_obj})
         })
 
         function ajaxDelMemberById(myData){
@@ -243,9 +248,10 @@
         删除组内用户
          */
         $("#user_in_group_body").on('click', '.del_member', function(){
-            var uid = $(this).attr('uid')
-            var gid = $(this).attr('gid')
-            swalDel(ajaxDelMemberById, {'gid': gid, 'uid': uid, 'myFunction': getMemberList})
+            var click_obj = $(this)
+            var uid = click_obj.attr('uid')
+            var gid = click_obj.attr('gid')
+            swalDel(ajaxDelMemberById, {'gid': gid, 'uid': uid,'myFunction': getMemberList})
             //getMemberList(gid)
         })
 

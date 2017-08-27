@@ -23,6 +23,9 @@ urlpatterns = [
         url(r'^modify/', include([
             url(r'^status/$', user.views.ModifyUserStatusView.as_view(), name='user_modify_status'),
             url(r'^group/$', user.views.ModifyUserGroupView.as_view(), name='user_modify_group'),
+        ])),
+        url(r'^search/', include([
+            url(r'^username/$', user.views.SearchUserView.as_view(), name='user_search'),
         ]))
     ])),
 

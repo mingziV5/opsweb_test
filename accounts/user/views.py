@@ -55,6 +55,7 @@ class UserlogoutTplView(TemplateView):
         return HttpResponseRedirect(reverse('user_login'))
 
 class UserListView(LoginRequiredMixin, ListView):
+    '''
     template_name = 'user/userlist.html'
     model = User
     paginate_by = 10
@@ -74,13 +75,52 @@ class UserListView(LoginRequiredMixin, ListView):
             start = 1
         if end > page_obj.paginator.num_pages:
             end = page_obj.paginator.num_pages
-        return range(start, end)
+        return range(start, end+1)
     
     def get_context_data(self, **kwargs):
         context = super(UserListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
         return context
+    '''
+    template_name = 'user/userlist.html'
+    model = User
+    paginate_by = 10
+    before_range_num = 4
+    after_range_num = 5
+    ordering = 'id'
 
+    def get_queryset(self):
+        queryset = super(UserListView, self).get_queryset()
+        queryset = queryset.filter(is_superuser=False)
+        #查询条件
+        username = self.request.GET.get('username', None)
+        if username:
+            queryset = queryset.filter(username__contains=username)
+        return queryset
+
+    def get_page_range(self, page_obj):
+        current_index = page_obj.number
+        start = current_index - self.before_range_num
+        end = current_index + self.after_range_num
+        if start <= 0:
+            start = 1
+        if end > page_obj.paginator.num_pages:
+            end = page_obj.paginator.num_pages
+        return range(start, end+1)
+
+    def get_context_data(self, **kwargs):
+        context = super(UserListView, self).get_context_data(**kwargs)
+        context['page_range_obj'] = self.get_page_range(context['page_obj'])
+
+        #处理查询条件
+        search_data = self.request.GET.copy()
+        try:
+            search_data.pop("page")
+        except:
+            pass
+        context.update(search_data.dict())
+        context['search_data'] = "&" + search_data.urlencode()
+        return context
 
 class ModifyUserStatusView(View):
     def post(self, request):
@@ -131,3 +171,45 @@ class ModifyUserGroupView(View):
             return JsonResponse(response)
         user_obj.groups.add(group_obj)
         return JsonResponse(response)
+
+class SearchUserView(ListView):
+    template_name = 'user/userlist.html'
+    model = User
+    paginate_by = 10
+    before_range_num = 4
+    after_range_num = 5
+    ordering = 'id'
+
+    def get_queryset(self):
+        queryset = super(SearchUserView, self).get_queryset()
+        queryset = queryset.filter(is_superuser=False)
+        #查询条件
+        username = self.request.GET.get('username', None)
+        if username:
+            queryset = queryset.filter(username__contains=username)
+        return queryset
+
+    def get_page_range(self, page_obj):
+        current_index = page_obj.number
+        start = current_index - self.before_range_num
+        end = current_index + self.after_range_num
+        if start <= 0:
+            start = 1
+        if end > page_obj.paginator.num_pages:
+            end = page_obj.paginator.num_pages
+        return range(start, end+1)
+
+    def get_context_data(self, **kwargs):
+        context = super(SearchUserView, self).get_context_data(**kwargs)
+        context['page_range_obj'] = self.get_page_range(context['page_obj'])
+
+        #处理查询条件
+        search_data = self.request.GET.copy()
+        try:
+            search_data.pop("page")
+        except:
+            pass
+        context.update(search_data.dict())
+        context['search_data'] = "&" + search_data.urlencode()
+        return context
+

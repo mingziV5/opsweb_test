@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/dashboard')),
     url(r'^dashboard/', include('dashboard.urls')),
     url(r'^account/', include('accounts.urls')),
+    url(r'^resource/', include('resources.urls')),
 ]

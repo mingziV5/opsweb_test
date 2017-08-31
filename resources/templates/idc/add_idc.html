@@ -53,6 +53,7 @@
 
         <div class="form-group form-footer">
             <div class="col-sm-offset-4 col-sm-8">
+                <!--<button type="button" class="btn btn-primary" id="form_submit">提交</button>-->
                 <button type="submit" class="btn btn-primary">提交</button>
                 <button type="reset" class="btn btn-default">重置</button>
             </div>
@@ -62,17 +63,18 @@
 
 {% endblock %}
 {% block js %}
+
     <script>
-        $('#basicvalidations').on('submit', function(){
+        /*
+        $('#form_submit').on('click', function(){
             var str = $('#basicvalidations').serialize()
             $.post('#', str, function(res){
-                if (res.status == 0){
-                    swal('ok')
-                } else {
-                    swal('error')
+                if (res.status == 1){
+                    swal(res.errmsg)
                 }
             })
         })
+        */
     </script>
 
 {% endblock %}

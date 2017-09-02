@@ -1,12 +1,9 @@
 {% extends "public/layout.html" %}
 
-
-
-
 {% block body %}
-
-
-    <form class="form-horizontal" role="form" parsley-validate id="basicvalidations" method="post">
+    <!--普通方式提交-->
+    <!--<form class="form-horizontal" role="form" parsley-validate id="basicvalidations" method="post">-->
+    <form class="form-horizontal" role="form" parsley-validate id="basicvalidations">
         {% csrf_token %}
         <div class="form-group">
             <label for="name" class="col-sm-2 control-label">idc名称（字母简称）*</label>
@@ -53,28 +50,26 @@
 
         <div class="form-group form-footer">
             <div class="col-sm-offset-4 col-sm-8">
-                <!--<button type="button" class="btn btn-primary" id="form_submit">提交</button>-->
-                <button type="submit" class="btn btn-primary">提交</button>
+                <button type="button" class="btn btn-primary" id="form_submit">提交</button>
+                <!--<button type="submit" class="btn btn-primary">提交</button>-->
                 <button type="reset" class="btn btn-default">重置</button>
             </div>
         </div>
     </form>
-
-
 {% endblock %}
 {% block js %}
-
     <script>
-        /*
         $('#form_submit').on('click', function(){
             var str = $('#basicvalidations').serialize()
-            $.post('#', str, function(res){
-                if (res.status == 1){
+            $.post("{% url 'modify_idc' %}", str, function(res){
+                if (res.status == 0){
+                    if (res.next_url = 'idc_list'){
+                        window.location.href="{% url 'idc_list' %}"
+                    }
+                } else {
                     swal(res.errmsg)
                 }
             })
         })
-        */
     </script>
-
 {% endblock %}

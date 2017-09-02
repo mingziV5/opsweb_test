@@ -1,0 +1,228 @@
+{% extends 'public/layout.html' %}
+
+{% block breadcrunb %}
+<li><a href="#">资源管理</a><span class="divider"></span></li>
+<li class="active">IDC列表</li>
+{% endblock %}
+
+{% block body %}
+    <table class='table table-striped'>
+        <tr>
+            <th>序号</th>
+            <th>简称</th>
+            <th>中文全称</th>
+            <th>联系人</th>
+            <th>电话</th>
+            <th>操作</th>
+        </tr>
+        {% for idc_obj in page_obj.object_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ idc_obj.name }}</td>
+            <td>{{ idc_obj.full_name }}</td>
+            <td>{{ idc_obj.contact }}</td>
+            <td>{{ idc_obj.phone }}</td>
+            <td>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info btn-sm update_idc"  data="{{ idc_obj.id  }}">修改</button>
+                    <button type="button" class="btn btn-sm btn-warning del_idc"  data="{{ idc_obj.id }}">删除</button>
+                </div>
+
+            </td>
+        </tr>
+        {% endfor%}
+    </table>
+
+    <div class="center-block">
+        <ul class='pagination center-block'>
+            <li><a href="{% url 'user_list' %}?page=1">首页</a></li>
+            {% if page_obj.has_previous %}
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
+            {% else %}
+            <li><a>上一页</a></li>
+            {% endif %}
+            {% for p in page_range_obj %}
+                {% if p == page_obj.number %}
+                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% else %}
+                <li><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
+            {% else %}
+            <li><a>下一页</a></li>
+            {% endif %}
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
+        </ul>
+    </div>
+
+    <!--修改 modal window-->
+    <div class="modal fade" id="update_idc_modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form class="form-horizontal" role="form" parsley-validate id="basicvalidations">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">×</button>
+                        <h4 id="update_idc_modal_title"></h4>
+                    </div>
+                    <div class="modal-body clearfix">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">idc名称（字母简称）*</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="name" id="upname" parsley-required="true" parsley-minlength="2"  autocomplete="off" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">idc名称（中文名）*</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="full_name" id="upfull_name" parsley-required="true" autocomplete="off" id="status">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">详细地址 *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="address" id="upaddress" parsley-required="true" autocomplete="off" id="status">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">联系人姓名 *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="contact" id="upcontact" parsley-required="true" autocomplete="off" id="status">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">联系电话 *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="phone" id="upphone" parsley-required="true" autocomplete="off" id="status">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">联系邮件地址 *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="email" id="upemail" parsley-required="true" autocomplete="off" id="status">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="update_idc_modal_form_submit">提交</button>
+                        <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function(){
+            //获取数据
+            $('.update_idc').click(function(){
+                var idc_id = $(this).attr('data')
+                var update_idc_modal = $('#update_idc_modal')
+                $.get("{% url 'modify_idc' %}", {'id': idc_id}, function(res){
+                    if(res.status == 0){
+                        //console.log(res)
+                        //swal('ok')
+                        $('#upname').val(res.idc_obj.name)
+                        $('#upfull_name').val(res.idc_obj.full_name)
+                        $('#upaddress').val(res.idc_obj.address)
+                        $('#upcontact').val(res.idc_obj.contact)
+                        $('#upphone').val(res.idc_obj.phone)
+                        $('#upemail').val(res.idc_obj.email)
+                        update_idc_modal.modal('show')
+                    } else {
+                        swal('获取错误', res.errmsg, 'error')
+                    }
+                })
+
+                //更新操作
+                $('#update_idc_modal_form_submit').click(function(){
+                    var data = $('#basicvalidations').serialize()
+                    data += '&id=' + idc_id
+                    console.log(data)
+                    $.ajax({
+                        url: "{% url 'modify_idc' %}",
+                        type: "put",
+                        data: data,
+                        success: function(res){
+                            if(res.status == 0){
+                                setTimeout(function(){window.location.reload();},100)
+                            } else {
+                                swal('错误', res.errmsg, 'error')
+                            }
+                        },
+                        beforeSend: function (xhr, settings) {
+                            var csrftoken = getCookie('csrftoken');
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                            }
+                        }
+                    })
+                })
+            })
+        })
+
+        $(function(){
+            $('.del_idc').click(function(){
+                var click_obj = $(this)
+                var idc_id = click_obj.attr('data')
+                swalDel(ajaxDelIdc, {'click_obj': click_obj, 'idc_id': idc_id})
+            })
+        })
+
+        function swalDel(ajaxFunction, myData){
+            swal({
+                title: '确认删除',
+                text: '删除后数据无法还原',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                closeOnConfirm: false,
+                closeOnCancel: false
+            },
+                function(isConfirm){
+                    if (isConfirm){
+                        ajaxFunction(myData)
+                    } else {
+                        swal("取消", "取消成功", "error")
+                    }
+                }
+            )
+        }
+
+        function ajaxDelIdc(myData){
+            $.ajax({
+                url: "{% url 'modify_idc' %}",
+                type: "delete",
+                data: {'idc_id': myData.idc_id},
+                success: function(res){
+                    if(res.status == 0){
+                        swal({
+                            "title": "idc删除成功",
+                            "text": "",
+                            "type": "success"
+                        }, function () {
+                            myData.click_obj.parents("tr").remove();
+                        });
+                    } else {
+                        swal("操作失败", res.errmsg, "error")
+                    }
+                },
+                beforeSend: function (xhr, settings) {
+                    var csrftoken = getCookie('csrftoken');
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                    }
+                }
+            })
+        }
+    </script>
+{% endblock %}

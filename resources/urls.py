@@ -1,5 +1,5 @@
 from django.conf.urls import include, url
-from resources import views
+from resources.idc import views
 
 urlpatterns = [
     url(r'^idc/', include([

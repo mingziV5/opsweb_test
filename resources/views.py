@@ -1,3 +1,4 @@
+"""
 from django.views.generic import TemplateView, ListView, View
 from django.shortcuts import redirect, reverse
 from django.http import JsonResponse
@@ -29,26 +30,6 @@ class CreateIdcView(TemplateView):
         #操作失败
         #return redirect("error", next="idc_add", msg="error")
         #return HttpResponse("")
-
-    """
-    通过ajax提交表单信息
-    def post(self, request):
-        add_idc_form = request.POST.copy()
-        add_idc_form.pop('csrfmiddlewaretoken')
-        add_idc_dict = add_idc_form.dict()
-        response = {}
-        try:
-            idc = Idc(**add_idc_dict)
-            idc.save()
-            response['status'] = 0
-            response['next_url'] = 'idc_list'
-            return JsonResponse(response)
-        except:
-            print(traceback.format_exc())
-            response['status'] = 1
-            response['errmsg'] = '添加idc信息错误'
-            return JsonResponse(response)
-    """
 
 class IdcListView(ListView):
     template_name = "idc/idc_list.html"
@@ -156,4 +137,4 @@ class ModifyIdcView(View):
             print(traceback.fomat_exc())
             response['status'] = 1
             response['errmsg'] = '删除idc出错'
-
+"""

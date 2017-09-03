@@ -1,14 +1,19 @@
-from django.views.generic import ListView,View
-from django.contrib.auth.models import Group, User
+from django.views.generic import ListView,View,TemplateView
+from django.contrib.auth.models import Group, User, Permission, ContentType
 from django.http import JsonResponse
 from django.db import IntegrityError
 from django.http import QueryDict
+from django.shortcuts import redirect
 import traceback
 
-class GroupListView(ListView):
+from django.contrib.auth.mixins import LoginRequiredMixin
+from permissions.mixins import MyPermissionRequiredMixin
+
+class GroupListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     template_name = "group/grouplist.html"
     model = Group
-
+    #指定权限
+    permission_required = "auth.add_group"
 class ModifyGroupView(View):
 
     def post(self, request):
@@ -107,6 +112,37 @@ class GroupMemberListView(View):
             response['errmsg'] = '删除组成员错误'
             return JsonResponse(response)
 
+class GroupPermissionList(TemplateView):
+    template_name = "group/modify_group_permissions.html"
 
+    def get_context_data(self, **kwargs):
+        context = super(GroupPermissionList, self).get_context_data(**kwargs)
+        context["contenttypes"] = ContentType.objects.all()
+        context["group"] = self.request.GET.get("gid", None)
+        context["group_permissions"] = self.get_group_permissions(context["group"])
+        print(context)
+        return context
+
+    def get_group_permissions(self, groupid):
+        try:
+            group_obj = Group.objects.get(pk=groupid)
+            return [p.id for p in group_obj.permissions.all()]
+        except Group.DoesNotExist:
+            return redirect("error", next="group_list", msg="用户组不存在")
+
+    def post(self, request):
+        permission_id_list = request.POST.getlist("permission", [])
+        groupid = request.POST.get("groupid", None)
+        print(groupid)
+        try:
+            group_obj = Group.objects.get(pk=groupid)
+        except Group.DoesNotExist:
+            return redirect("error", next="group_list", msg="用户组不存在")
+        if len(permission_id_list) > 0:
+            permission_objs = Permission.objects.filter(id__in=permission_id_list)
+            group_obj.permissions.set(permission_objs)
+        else:
+            group_obj.permissions.clear()
+        return redirect("success", next="group_list")
 
 

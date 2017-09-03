@@ -49,6 +49,39 @@ class CreateIdcView(TemplateView):
             response['errmsg'] = '添加idc信息错误'
             return JsonResponse(response)
     """
+    """
+    作业
+    def post(self, request):
+        name = request.POST.get('name', None)
+        full_name = request.POST.get('full_name', None)
+        address = request.POST.get('address', None)
+        username = request.POST.get('username', None)
+        phone = request.POST.get('phone', None)
+        email = request.POST.get('email', None)
+        #验证数据
+        errmsg = []
+        if not name:
+            errmsg.append("idc name is null")
+        if not full_name:
+            errmsg.append("idc full name is null")
+        if errmsg:
+            return redirect("error", next="idc_add", msg=json.dumps(errmsg))
+
+        idc = Idc()
+        idc.name = name
+        idc.full_name = full_name
+        idc.address = address
+        idc.username = username
+        idc.phone = phone
+        idc.email = email
+
+        try:
+            idc.save()
+            return redirect("success", next="idc_list")
+        except Exception as e:
+            return redirect("error", next="idc_add", msg=e.args)
+        return redirect("success", next="idc_list")
+        """
 
 class IdcListView(ListView):
     template_name = "idc/idc_list.html"

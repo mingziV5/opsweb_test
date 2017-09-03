@@ -1,0 +1,65 @@
+{% extends 'public/layout.html' %}
+
+{% block breadcrunb %}
+<li><a href="#">权限管理</a><span class="divider"></span></li>
+<li class="active">权限列表</li>
+{% endblock %}
+
+{% block body %}
+    <table class='table table-striped'>
+        <tr>
+            <th>序号</th>
+            <th>app_name</th>
+            <th>model_name</th>
+            <th>code_name</th>
+            <th>permission_name</th>
+            <th>操作</th>
+        </tr>
+        {% for permission_obj in page_obj.object_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <!-- 一对多模型 可以直接显示， 省略字段的id -->
+            <td>{{ permission_obj.content_type.app_label }}</td>
+            <td>{{ permission_obj.content_type.model }}</td>
+            <td>{{ permission_obj.codename }}</td>
+            <td>{{ permission_obj.name }}</td>
+            <td>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info btn-sm update_permission"  data="{{ permission_obj.id  }}">修改</button>
+                </div>
+
+            </td>
+        </tr>
+        {% endfor%}
+    </table>
+
+    <div class="center-block">
+        <ul class='pagination center-block'>
+            <li><a href="{% url 'permission_list' %}?page=1">首页</a></li>
+            {% if page_obj.has_previous %}
+            <li><a href="{% url 'permission_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
+            {% else %}
+            <li><a>上一页</a></li>
+            {% endif %}
+            {% for p in page_range_obj %}
+                {% if p == page_obj.number %}
+                <li class='active'><a href="{% url 'permission_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% else %}
+                <li><a href="{% url 'permission_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li><a href="{% url 'permission_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
+            {% else %}
+            <li><a>下一页</a></li>
+            {% endif %}
+            <li><a href="{% url 'permission_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
+        </ul>
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+
+{% endblock %}

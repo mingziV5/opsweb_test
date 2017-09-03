@@ -3,9 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.http.response import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.http import QueryDict
-from django.urls import reverse
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required, permission_required
 
 class UserLoginView(View):
     def post(self, request, *args, **kwargs):
@@ -121,6 +124,10 @@ class UserListView(LoginRequiredMixin, ListView):
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
         return context
+
+    @method_decorator(permission_required("auth.add_user",login_url=reverse_lazy("error" ,kwargs={"next":"index", "msg":"没有权限，请联系管理员"})))
+    def get(self, request, *args, **kwargs):
+        return super(UserListView, self).get(request, *args, **kwargs)
 
 class ModifyUserStatusView(View):
     def post(self, request):

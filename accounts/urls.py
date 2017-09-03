@@ -36,6 +36,9 @@ urlpatterns = [
         url(r'^member/', include([
             url(r'^get/$', group.views.GroupMemberListView.as_view(), name='group_members'),
             url(r'^del/$', group.views.GroupMemberListView.as_view(), name='group_members_del'),
+        ])),
+        url(r'permission/', include([
+            url(r'modify/$', group.views.GroupPermissionList.as_view(), name='group_permission_modify'),
         ]))
     ])),
 ]

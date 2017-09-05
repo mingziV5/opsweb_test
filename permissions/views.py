@@ -1,9 +1,10 @@
 from django.views.generic import ListView,TemplateView
 from django.contrib.auth.models import Permission, ContentType
 from django.shortcuts import redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
 
-class PermissionListView(ListView):
+class PermissionListView(LoginRequiredMixin, ListView):
     template_name = "permissions_list.html"
     model = Permission
     paginate_by = 10
@@ -31,7 +32,7 @@ class PermissionListView(ListView):
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
         return context
 
-class PermissionAddView(TemplateView):
+class PermissionAddView(LoginRequiredMixin, TemplateView):
     template_name = "permission_add.html"
 
     def get_context_data(self, **kwargs):

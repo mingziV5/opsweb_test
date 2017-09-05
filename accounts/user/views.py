@@ -129,7 +129,7 @@ class UserListView(LoginRequiredMixin, ListView):
     def get(self, request, *args, **kwargs):
         return super(UserListView, self).get(request, *args, **kwargs)
 
-class ModifyUserStatusView(View):
+class ModifyUserStatusView(LoginRequiredMixin, View):
     def post(self, request):
         uid = request.POST.get('uid', None)
         print(uid)
@@ -147,7 +147,7 @@ class ModifyUserStatusView(View):
             response['errmsg'] = "用户不存在"
         return JsonResponse(response)
 
-class ModifyUserGroupView(View):
+class ModifyUserGroupView(LoginRequiredMixin, View):
     def get(self, request):
         uid = request.GET.get('uid', None)
         group_objs = Group.objects.all()
@@ -179,7 +179,7 @@ class ModifyUserGroupView(View):
         user_obj.groups.add(group_obj)
         return JsonResponse(response)
 
-class SearchUserView(ListView):
+class SearchUserView(LoginRequiredMixin, ListView):
     template_name = 'user/userlist.html'
     model = User
     paginate_by = 10

@@ -3,12 +3,12 @@ from django.shortcuts import redirect, reverse
 from django.http import JsonResponse
 from resources.idc.models import Idc
 from django.http import QueryDict
-
+from django.contrib.auth.mixins import LoginRequiredMixin
 import traceback
 # Create your views here.
 
 #通过页面submit提交
-class CreateIdcView(TemplateView):
+class CreateIdcView(LoginRequiredMixin, TemplateView):
     template_name = "idc/add_idc.html"
 
     def post(self, request):
@@ -83,7 +83,7 @@ class CreateIdcView(TemplateView):
         return redirect("success", next="idc_list")
         """
 
-class IdcListView(ListView):
+class IdcListView(LoginRequiredMixin, ListView):
     template_name = "idc/idc_list.html"
     model = Idc
     paginate_by = 10
@@ -112,7 +112,7 @@ class IdcListView(ListView):
         print(context)
         return context
 
-class ModifyIdcView(View):
+class ModifyIdcView(LoginRequiredMixin, View):
 
     def post(self, request):
         add_idc_form = request.POST.copy()

@@ -9,7 +9,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 
-<title>Reboot运维平台 {{ title }}</title>
+<title>运维平台 {{ title }}</title>
 <link href="/static/img/favicon.ico" type="image/x-icon" rel="shortcut icon">
 
 <!--第三方插件样式-->
@@ -92,20 +92,33 @@ button.detail{
 
 <!--页面头部导航 -->
 <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-    <a class="navbar-brand" href="/">Reboot Admin</a>
+    <a class="navbar-brand" href="/">devops 运维平台</a>
     <ul class="nav navbar-nav">
 	<li  class="dropdown" id="profile-messages" >
-    <a title="" href="#" data-toggle="dropdown" data-target="#profile-messages" class="dropdown-toggle"><i class="fa fa-user fa-fw"></i><span class="text">Admin</span><b class="caret"></b></a>
+        <a title="" href="#" data-toggle="dropdown" data-target="#profile-messages" class="dropdown-toggle">
+            <i class="fa fa-user fa-fw">
+            </i>
+            <span class="text">
+                {% if user.username %}
+                {{ user.username }}
+                {% else %}
+                游客
+                {% endif %}
+            </span>
+            <b class="caret"></b>
+        </a>
 	    <ul class="dropdown-menu">
-		<li><a href="#"><i class="fa fa-user fa-fw"></i>个人中心</a></li>
-		<li class="divider"></li>
-		<li><a href="{% url 'user_logout' %}"><i class="fa fa-mail-forward fa-fw"></i>退出登录</a></li>
+            <li><a href="#"><i class="fa fa-user fa-fw"></i>个人中心</a></li>
+            <li class="divider"></li>
+            <li><a href="{% url 'user_logout' %}"><i class="fa fa-mail-forward fa-fw"></i>退出登录</a></li>
 	    </ul>
 	</li>
+    <!--
 	<li><a href="{% url 'user_logout' %}"><i class="fa fa-mail-forward fa-fw" ></i><span>退出登录</span></a></li>
+	-->
     </ul>
     <ul class="nav navbar-nav pull-right">
-        <li><a href="http://www.51reboot.com" target="_blank">Reboot官网</a></li>
+        <li><a href="#" target="_blank">官网</a></li>
         <li><a href="#" target="_blank">zabbix</a></li>
     </ul>
     <form class="navbar-form">

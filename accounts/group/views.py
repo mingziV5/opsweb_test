@@ -61,7 +61,7 @@ class ModifyGroupView(View):
             return JsonResponse(response)
 
 
-class GroupMemberListView(View):
+class GroupMemberListView(LoginRequiredMixin, View):
 
     def get(self, request):
         gid = request.GET.get('gid', None)
@@ -112,7 +112,7 @@ class GroupMemberListView(View):
             response['errmsg'] = '删除组成员错误'
             return JsonResponse(response)
 
-class GroupPermissionList(TemplateView):
+class GroupPermissionList(LoginRequiredMixin, TemplateView):
     template_name = "group/modify_group_permissions.html"
 
     def get_context_data(self, **kwargs):

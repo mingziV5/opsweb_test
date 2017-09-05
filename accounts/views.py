@@ -7,6 +7,7 @@ from django.views.generic import View, TemplateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
+from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
 def user_login(request):
     if request.method == 'GET':
@@ -44,7 +45,7 @@ class UserListView(View):
         user_queryset = User.objects.all()
         return render(request, 'user/userlist.html', {'userlist': user_queryset})
 
-class TplUserListView(TemplateView):
+class TplUserListView(LoginRequiredMixin, TemplateView):
     template_name = 'user/userlist.html'
     counts = 10
 
@@ -89,7 +90,7 @@ class TplUserListView(TemplateView):
         print(page)
         return super(TplUserListView, self).get(request, *args, **kwargs) 
 
-class LUserListView(ListView):
+class LUserListView(LoginRequiredMixin, ListView):
     template_name = 'user/userlist.html'
     model = User
     paginate_by = 8

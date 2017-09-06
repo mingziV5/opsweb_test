@@ -125,59 +125,74 @@ class UserListView(LoginRequiredMixin, ListView):
         context['search_data'] = "&" + search_data.urlencode()
         return context
 
-    @method_decorator(permission_required("auth.add_user",login_url=reverse_lazy("error" ,kwargs={"next":"index", "msg":"没有权限，请联系管理员"})))
+    #权限验证，类视图，需要装饰在view的get方法上，没有get方法重写get方法
+    @method_decorator(permission_required("auth.add_user",login_url=reverse_lazy("error" ,kwargs={"next":"index", "msg":"没有相应的权限"})))
     def get(self, request, *args, **kwargs):
         return super(UserListView, self).get(request, *args, **kwargs)
 
 class ModifyUserStatusView(LoginRequiredMixin, View):
+
     def post(self, request):
-        uid = request.POST.get('uid', None)
-        print(uid)
         response = {}
-        try:
-            user_obj = User.objects.get(id=uid)
-            if user_obj.is_active:
-                user_obj.is_active = False
-            else:
-                user_obj.is_active = True
-            user_obj.save()
-            response['status'] = 0
-        except User.DoesNotExist:
+        if request.user.has_perm('auth.change_user'):
+            uid = request.POST.get('uid', None)
+            print(uid)
+            try:
+                user_obj = User.objects.get(id=uid)
+                if user_obj.is_active:
+                    user_obj.is_active = False
+                else:
+                    user_obj.is_active = True
+                user_obj.save()
+                response['status'] = 0
+            except User.DoesNotExist:
+                response['status'] = 1
+                response['errmsg'] = "用户不存在"
+            return JsonResponse(response)
+        else:
             response['status'] = 1
-            response['errmsg'] = "用户不存在"
-        return JsonResponse(response)
+            response['errmsg'] = "没有操作用户的权限"
+            return JsonResponse(response)
 
 class ModifyUserGroupView(LoginRequiredMixin, View):
     def get(self, request):
-        uid = request.GET.get('uid', None)
-        group_objs = Group.objects.all()
-        try:
-            user_obj = User.objects.get(id=uid)
-        except User.DoesNotExist:
-            pass
+        if request.user.has_perm('auth.change_user'):
+            uid = request.GET.get('uid', None)
+            group_objs = Group.objects.all()
+            try:
+                user_obj = User.objects.get(id=uid)
+            except User.DoesNotExist:
+                pass
+            else:
+                group_objs = group_objs.exclude(id__in=user_obj.groups.values_list('id'))
+            return JsonResponse(list(group_objs.values('id', 'name')), safe=False)
         else:
-            group_objs = group_objs.exclude(id__in=user_obj.groups.values_list('id'))
-        return JsonResponse(list(group_objs.values('id', 'name')), safe=False)
+            return JsonResponse({'status': 1, 'errmsg': '没有操作用户的权限'})
 
     def put(self, request):
         response = {'status': 0}
-        data = QueryDict(request.body)
-        uid = data.get('uid', None)
-        gid = data.get('gid', None)
-        try:
-            user_obj = User.objects.get(id=uid)
-        except User.DoesNotExist:
-            response['status'] = 1
-            response['errmsg'] = '用户不存在'
+        if request.user.has_perm('auth.change_user'):
+            data = QueryDict(request.body)
+            uid = data.get('uid', None)
+            gid = data.get('gid', None)
+            try:
+                user_obj = User.objects.get(id=uid)
+            except User.DoesNotExist:
+                response['status'] = 1
+                response['errmsg'] = '用户不存在'
+                return JsonResponse(response)
+            try:
+                group_obj = Group.objects.get(id=gid)
+            except Group.DoesNotExist:
+                response['status'] = 1
+                response['errmsg'] = '用户组不存在'
+                return JsonResponse(response)
+            user_obj.groups.add(group_obj)
             return JsonResponse(response)
-        try:
-            group_obj = Group.objects.get(id=gid)
-        except Group.DoesNotExist:
+        else:
             response['status'] = 1
-            response['errmsg'] = '用户组不存在'
+            response['errmsg'] = '没有操作用户的权限'
             return JsonResponse(response)
-        user_obj.groups.add(group_obj)
-        return JsonResponse(response)
 
 class SearchUserView(LoginRequiredMixin, ListView):
     template_name = 'user/userlist.html'

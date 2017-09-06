@@ -8,108 +8,132 @@ import traceback
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from permissions.mixins import MyPermissionRequiredMixin
+from permissions.mixins import my_permission_required
+from django.utils.decorators import method_decorator
 
 class GroupListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     template_name = "group/grouplist.html"
     model = Group
     #指定权限
-    permission_required = "auth.add_group"
+    permission_required = "auth.view_group"
+
 class ModifyGroupView(View):
 
+    #添加组
     def post(self, request):
-        group_name = request.POST.get('name', None)
         response = {}
-        if not group_name:
-            response['status'] = 1
-            response['errmsg'] = '不能为空'
+        if request.user.has_perm('auth.add_group'):
+            group_name = request.POST.get('name', None)
+            if not group_name:
+                response['status'] = 1
+                response['errmsg'] = '不能为空'
+                return JsonResponse(response)
+            try:
+                group = Group(name=group_name)
+                group.save()
+                response['status'] = 0
+                response['group_id'] = group.id
+                response['group_name'] = group.name
+            except IntegrityError:
+                response['status'] =1
+                response['errmsg'] = '用户组以存在'
+            except:
+                response['status'] = 1
+                response['errmsg'] = '添加用户组失败'
             return JsonResponse(response)
-        try:
-            group = Group(name=group_name)
-            group.save()
-            response['status'] = 0
-            response['group_id'] = group.id
-            response['group_name'] = group.name
-        except IntegrityError:
-            response['status'] =1
-            response['errmsg'] = '用户组以存在'
-        except:
+        else:
             response['status'] = 1
-            response['errmsg'] = '添加用户组失败'
-        return JsonResponse(response)
+            response['errmsg'] = '没有添加用户组权限'
+            return JsonResponse(response)
 
     def delete(self, request):
         response = {'status': 0}
-        data = QueryDict(request.body)
-        gid = data.get('gid', None)
-        if not gid:
+        if request.user.has_perm('auth.delete_group'):
+            data = QueryDict(request.body)
+            gid = data.get('gid', None)
+            if not gid:
+                response['status'] = 1
+                response['errmsg'] = 'gid不能为空'
+                return JsonResponse(response)
+            group_obj = Group.objects.get(id=gid)
+            if group_obj.user_set.all().count() != 0:
+                response['status'] = 1
+                response['errmsg'] = '不能删除，组内还有成员'
+                return JsonResponse(response)
+            try:
+                group_obj.delete()
+                response['status'] == 0
+                return JsonResponse(response)
+            except:
+                print(traceback.format_exc())
+                response['status'] == 1
+                response['errmsg'] == '删除组出错'
+                return JsonResponse(response)
+        else:
             response['status'] = 1
-            response['errmsg'] = 'gid不能为空'
-            return JsonResponse(response)
-        group_obj = Group.objects.get(id=gid)
-        if group_obj.user_set.all().count() != 0:
-            response['status'] = 1
-            response['errmsg'] = '不能删除，组内还有成员'
-            return JsonResponse(response)
-        try:
-            group_obj.delete()
-            response['status'] == 0
-            return JsonResponse(response)
-        except:
-            print(traceback.format_exc())
-            response['status'] == 1
-            response['errmsg'] == '删除组出错'
+            response['errmsg'] = '没有删除用户组权限'
             return JsonResponse(response)
 
 
 class GroupMemberListView(LoginRequiredMixin, View):
 
     def get(self, request):
-        gid = request.GET.get('gid', None)
         response = {}
-        if not gid:
+        if request.user.has_perm('auth.view_group') and request.user.has_perm('auth.view_user'):
+            gid = request.GET.get('gid', None)
+            if not gid:
+                response['status'] = 1
+                response['errmsg'] = 'gid不能为空'
+                return JsonResponse(response)
+            try:
+                #查询用户组内成员
+                #1
+                group_obj = Group.objects.get(id=gid)
+                members = group_obj.user_set.all()
+                #2
+                #User.objects.all().filter(用户组=组id)
+                list_members = list(members.values('id', 'username'))
+                response['status'] = 0
+                response['list_members'] = list_members
+                return JsonResponse(response)
+            except:
+                print(traceback.format_exc())
+                response['status'] = 1
+                response['errmsg'] = '查找组成员错误'
+                return JsonResponse(response)
+        else:
             response['status'] = 1
-            response['errmsg'] = 'gid不能为空'
-            return JsonResponse(response)
-        try:
-            #查询用户组内成员
-            #1
-            group_obj = Group.objects.get(id=gid)
-            members = group_obj.user_set.all()
-            #2
-            #User.objects.all().filter(用户组=组id)
-            list_members = list(members.values('id', 'username'))
-            response['status'] = 0
-            response['list_members'] = list_members
-            return JsonResponse(response)
-        except:
-            print(traceback.format_exc())
-            response['status'] = 1
-            response['errmsg'] = '查找组成员错误'
+            response['errmsg'] = '没有查看组内成员权限'
             return JsonResponse(response)
 
     def delete(self, request):
         response = {'status': 0}
-        data = QueryDict(request.body)
-        uid = data.get('uid', None)
-        gid = data.get('gid', None)
+        if request.user.has_perm('auth.remove_user_from_group'):
+            data = QueryDict(request.body)
+            uid = data.get('uid', None)
+            gid = data.get('gid', None)
 
-        if not uid or not gid:
+            if not uid or not gid:
+                response['status'] = 1
+                response['errmsg'] = 'gid 或者 uid 为空'
+                return JsonResponse(response)
+
+            try:
+                user_obj = User.objects.get(id=uid)
+                group_obj = Group.objects.get(id=gid)
+                user_obj.groups.remove(group_obj)
+                #通过组删除用户
+                #group_obj.user_set.remove(user_obj)
+                return JsonResponse(response)
+
+            except:
+                print(traceback.format_exc())
+                response['status'] = 1
+                response['errmsg'] = '删除组成员错误'
+                return JsonResponse(response)
+        else:
             response['status'] = 1
-            response['errmsg'] = 'gid 或者 uid 为空'
-            return JsonResponse(response)
-
-        try:
-            user_obj = User.objects.get(id=uid)
-            group_obj = Group.objects.get(id=gid)
-            user_obj.groups.remove(group_obj)
-            #通过组删除用户
-            #group_obj.user_set.remove(user_obj)
-            return JsonResponse(response)
-
-        except:
-            print(traceback.format_exc())
-            response['status'] = 1
-            response['errmsg'] = '删除组成员错误'
+            response['errmsg'] = '没有移除用户的权限'
             return JsonResponse(response)
 
 class GroupPermissionList(LoginRequiredMixin, TemplateView):

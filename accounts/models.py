@@ -15,7 +15,3 @@ class Person(models.Model):
         ordering = ["username"]
         #该模型所用的数据表的名称，强烈推荐使用小写
         db_table = "person"
-
-
-
-

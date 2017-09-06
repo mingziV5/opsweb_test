@@ -2,6 +2,8 @@ from django.views.generic import ListView,TemplateView
 from django.contrib.auth.models import Permission, ContentType
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+from django.db import connection
 # Create your views here.
 
 class PermissionListView(LoginRequiredMixin, ListView):
@@ -65,4 +67,47 @@ class PermissionAddView(LoginRequiredMixin, TemplateView):
             print(e)
             msg = "添加权限出错"
             return redirect("error", next="permission_add", msg=msg)
+
+class PermissionSearchView(LoginRequiredMixin, ListView):
+    template_name = 'permissions_list.html'
+    model = Permission
+    paginate_by = 10
+    before_range_num = 4
+    after_range_num = 5
+    ordering = 'id'
+
+    def get_queryset(self):
+        queryset = super(PermissionSearchView, self).get_queryset()
+        #获得搜索内容
+        search_value = self.request.GET.get('search_value', None)
+        if search_value:
+            queryset = queryset.filter(codename__contains=search_value)
+            print(connection.queries)
+        return queryset
+
+    def get_page_range(self, page_obj):
+        current_index = page_obj.number
+        start = current_index - self.before_range_num
+        end = current_index + self.after_range_num
+        if start <= 0:
+            start = 1
+        if end > page_obj.paginator.num_pages:
+            end = page_obj.paginator.num_pages
+        return range(start, end+1)
+
+    def get_context_data(self, **kwargs):
+        context = super(PermissionSearchView, self).get_context_data(**kwargs)
+        context['page_range_obj'] = self.get_page_range(context['page_obj'])
+
+        #处理查询条件
+        search_data = self.request.GET.copy()
+        try:
+            search_data.pop("page")
+        except:
+            pass
+        context.update(search_data.dict())
+        context['search_data'] = "&" + search_data.urlencode()
+        return context
+
+
 

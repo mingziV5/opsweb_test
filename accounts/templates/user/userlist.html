@@ -72,9 +72,9 @@
             {% endif %}
             {% for p in page_range_obj %}
                 {% if p == page_obj.number %}
-                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% else %}
-                <li><a href="{% url 'user_list' %}?page={{ p }}">{{ p }}</a></li>
+                <li><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% endif %}
             {% endfor %}
             {% if page_obj.has_next %}

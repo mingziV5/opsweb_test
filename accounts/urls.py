@@ -39,6 +39,7 @@ urlpatterns = [
         ])),
         url(r'permission/', include([
             url(r'modify/$', group.views.GroupPermissionList.as_view(), name='group_permission_modify'),
+            url(r'view/$', group.views.GroupPermissionListAjax.as_view(), name='group_permission_view'),
         ]))
     ])),
 ]

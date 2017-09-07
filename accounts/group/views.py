@@ -173,4 +173,29 @@ class GroupPermissionList(LoginRequiredMixin, TemplateView):
             group_obj.permissions.clear()
         return redirect("success", next="group_list")
 
+class GroupPermissionListAjax(LoginRequiredMixin, View):
+
+    def get(self, request):
+        response = {}
+        if request.user.has_perm('auth.view_group'):
+            gid = request.GET.get("gid", None)
+            if not gid:
+                response['status'] = 1
+                response['errmsg'] = "用户组不存在"
+                return JsonResponse(response)
+            try:
+                group_obj = Group.objects.get(pk=gid)
+                group_permission_list = list(group_obj.permissions.values('name','content_type__model'))
+                response['group_permission_list'] = group_permission_list
+                response['status'] = 0
+                return JsonResponse(response)
+            except:
+                print(traceback.format_exc())
+                response['status'] = 1
+                response['errmsg'] = '查找权限异常'
+                return JsonResponse(response)
+        else:
+            response['status'] = 1
+            response['errmsg'] = '没有权限'
+
 

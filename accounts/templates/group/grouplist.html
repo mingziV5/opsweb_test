@@ -16,8 +16,8 @@
             <td>{{ group_obj.name }}</td>
             <td>
                 <button type="button" class="btn btn-primary btn-sm users_in_group" groupid="{{ group_obj.id }}">成员列表</button>
-                <button type="button" class="btn btn-success btn-sm" >查看权限</button>
-                <a  class="btn btn-info btn-sm" href="{% url 'group_permission_modify' %}?gid={{ group_obj.id }}">修改权限</a>
+                <button type="button" class="btn btn-primary btn-sm permission_in_group" groupid="{{ group_obj.id }}">查看权限</button>
+                <a  class="btn btn-primary btn-sm" href="{% url 'group_permission_modify' %}?gid={{ group_obj.id }}">修改权限</a>
                 <button type="button" class="btn btn-danger btn-sm del_group" groupid="{{ group_obj.id }}">删除</button>
             </td>
         </tr>
@@ -62,6 +62,30 @@
                     </div>
                     <div class="col-xs-4">
                         <h4>操作</h4>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="permission_in_group" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 id="permission_in_group_title"></h4>
+                </div>
+                <div class="modal-body clearfix" id="permission_in_group_body">
+                    <div class="col-xs-8">
+                        <h4>模型名</h4>
+                    </div>
+                    <div class="col-xs-4">
+                        <h4>权限名</h4>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -153,6 +177,26 @@
             getMemberList(gid)
         })
 
+        $(".permission_in_group").click(function(){
+            var gid = $(this).attr('groupid')
+            $("#permission_in_group").modal("show")
+            $.get("{% url 'group_permission_view' %}", {'gid': gid}, function(res){
+                if(res.status !=0) {
+                    swal("查找失败", res.errmsg, 'error')
+                } else {
+                    //console.log(res.group_permission_list)
+                    var html = '<div class="col-xs-8"><h4>模型名</h4></div>'
+                    html += '<div class="col-xs-4"><h4>权限名</h4></div>'
+                    $.each(res.group_permission_list, function(index, value){
+                        html += '<div class="row" style="margin-bottom: 6px">'
+                        html += '<div class="col-xs-6"><h4>'+ value.content_type__model +'</h4></div>'
+                        html += '<div class="col-xs-6"><h4>'+ value.name +'</h4></div>'
+                        html += '</div>'
+                    })
+                    $("#permission_in_group_body").html(html)
+                }
+            })
+        })
 
 
         function swalDel(ajaxFunction, myData){

@@ -56,9 +56,13 @@ class ModifyGroupView(View):
                 response['errmsg'] = 'gid不能为空'
                 return JsonResponse(response)
             group_obj = Group.objects.get(id=gid)
-            if group_obj.user_set.all().count() != 0:
+            if group_obj.user_set.all().count() > 0:
                 response['status'] = 1
                 response['errmsg'] = '不能删除，组内还有成员'
+                return JsonResponse(response)
+            if group_obj.permissions.all().count() > 0:
+                response['status'] = 1
+                response['errmsg'] = '不能删除，组内有赋权'
                 return JsonResponse(response)
             try:
                 group_obj.delete()

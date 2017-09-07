@@ -21,7 +21,7 @@ class PermissionListView(LoginRequiredMixin, ListView):
         search_value = self.request.GET.get('search_value', None)
         if search_value:
             #Q连表查询 |：OR ~: != &: AND
-            queryset = queryset.filter(Q(codename__contains=search_value)|Q(content_type_id__model__contains=search_value))
+            queryset = queryset.filter(Q(codename__icontains=search_value)|Q(content_type_id__model__icontains=search_value))
             #print(queryset.filter(Q(codename__contains=search_value)|Q(content_type_id__model__contains=search_value)).query)
         return queryset
 

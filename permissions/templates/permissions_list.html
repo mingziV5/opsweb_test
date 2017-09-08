@@ -35,7 +35,7 @@
             <td>{{ permission_obj.name }}</td>
             <td>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-info btn-sm update_permission"  data="{{ permission_obj.id  }}">修改</button>
+                    <button type="button" class="btn btn-primary btn-sm update_permission"  data="{{ permission_obj.id  }}">修改</button>
                 </div>
 
             </td>
@@ -69,7 +69,11 @@
 
 
 {% endblock %}
-
+    <script>
+        $(function(){
+            $('.update_permission').click()
+        })
+    </script>
 {% block js %}
 
 {% endblock %}

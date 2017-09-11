@@ -20,6 +20,8 @@
         <tr>
             <th>序号</th>
             <th>用户名</th>
+            <th>中文名</th>
+            <th>手机号</th>
             <th>状态</th>
             <th>邮箱</th>
             <th>操作</th>
@@ -28,6 +30,8 @@
         <tr>
             <td>{{ forloop.counter }}</td>
             <td>{{ user_obj.username }}</td>
+            <td>{{ user_obj.userprofile.name }}</td>
+            <td>{{ user_obj.userprofile.phone }}</td>
             <td class="status">
                 {% if user_obj.is_active  %}
                     <span class="glyphicon glyphicon-ok-circle text-success" ></span>正常

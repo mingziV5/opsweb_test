@@ -5,6 +5,7 @@ from resources.idc.models import Idc
 from django.http import QueryDict
 from django.contrib.auth.mixins import LoginRequiredMixin
 import traceback
+from resources.idc.forms import CreateIdcForm
 # Create your views here.
 
 #通过页面submit提交
@@ -136,6 +137,28 @@ class ModifyIdcView(LoginRequiredMixin, View):
             response['status'] = 1
             response['errmsg'] = '没有添加idc权限'
             return JsonResponse(response)
+
+    '''
+    应用表单验证
+    def post(self, request):
+        response = {}
+        idc_form = CreateIdcForm(request.POST)
+        if idc_form.is_valid():
+            idc = Idc(**idc_form.cleaned_data)
+            try:
+                idc.save()
+                response['status'] = 0
+                response['next_url'] = 'idc_list'
+                return JsonResponse(response)
+            except:
+                response['status'] = 1
+                response['errmsg'] = '添加idc信息错误'
+                return JsonResponse(response)
+        else:
+            response['status'] = 1
+            response['errmsg'] = '表单信息验证错误'
+            return JsonResponse(response)
+    '''
 
     def get(self, request):
         response = {}

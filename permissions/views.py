@@ -3,6 +3,8 @@ from django.contrib.auth.models import Permission, ContentType
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from permissions.forms import CreatePermissionForm
+import json
 from django.db import connection
 # Create your views here.
 
@@ -82,6 +84,18 @@ class PermissionAddView(LoginRequiredMixin, TemplateView):
             print(e)
             msg = "添加权限出错"
             return redirect("error", next="permission_add", msg=msg)
+
+    def post(self, request):
+        permission_form = CreatePermissionForm(request.POST)
+        if permission_form.is_valid():
+            permission = Permission(**permission_form.cleaned_data)
+            try:
+                permission.save()
+                return redirect('success', next='permission_list')
+            except Exception as e:
+                return redirect('error', next='permission_add', msg=e.args)
+        else:
+            return redirect('error', next='permission_add', msg=json.dumps(json.load(permission_form.errors.as_json()), ensure_ascii=False))
 
 
 

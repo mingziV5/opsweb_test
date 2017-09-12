@@ -32,10 +32,10 @@
             <td>{{ permission_obj.content_type.app_label }}</td>
             <td>{{ permission_obj.content_type.model }}</td>
             <td>{{ permission_obj.codename }}</td>
-            <td>{{ permission_obj.name }}</td>
+            <td class='permission_name'>{{ permission_obj.name }}</td>
             <td>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary btn-sm update_permission"  data="{{ permission_obj.id  }}">修改</button>
+                    <button type="button" class="btn btn-primary btn-sm update_permission"  data="{{ permission_obj.id }}">修改</button>
                 </div>
 
             </td>
@@ -67,13 +67,82 @@
         </ul>
     </div>
 
+    <!-- 修改权限name -->
+    <div class="modal fade" id="update_permission_name" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4>修改权限名称</h4>
+                </div>
+                <div class="modal-body form-inline">
+                    <div class="form-group">
+                        <label for="exampleInputName2">权限说明：</label>
+                        <input type="text" class="form-control" id="form_permission_name" />
+                    </div>
+                    <button class="btn btn-primary" id="update_permission_name_btn">提交</button>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+                </div>
+
+            </div>
+        </div>
+    </div>
 {% endblock %}
+
+{% block js %}
+
     <script>
         $(function(){
-            $('.update_permission').click()
+            $('.update_permission').click(function(){
+                var this_obj = $(this)
+                var permission_id = this_obj.attr('data')
+                var update_permission_name_obj = $('#update_permission_name')
+                update_permission_name_obj.modal('show')
+                $.get('{% url 'permission_add' %}', {'id': permission_id}, function(res){
+                    if(res.status == 1) {
+                        swal("操作失败", res.errmsg, "error")
+                    } else {
+                        $('#form_permission_name').val(res.permission_name)
+                    }
+                })
+                $('#update_permission_name_btn').click(function(){
+                    var permission_name = $('#form_permission_name').val()
+                    $.ajax({
+                        url: "{% url 'permission_add' %}",
+                        type: 'patch',
+                        data: {'id': permission_id, 'name': permission_name},
+                        success: function (res) {
+                            if (res.status == 1) {
+                                swal("操作失败", res.errmsg, "error")
+                            } else {
+                                swal({
+                                    "title": "修改权限名称成功",
+                                    "text": "",
+                                    "type": "success"
+                                }, function () {
+                                    this_obj.parents('td').prev('.permission_name').html(permission_name)
+                                    update_permission_name_obj.modal('hide')
+                                    //setTimeout(function () {window.location.reload();}, 100)
+                                    //var click_obj = $(this)
+                                    //click_obj.parents("tr").remove();
+                                    //myData.click_obj.parents("tr").remove();
+
+                                });
+                            }
+                        },
+                        beforeSend: function (xhr, settings) {
+                            var csrftoken = getCookie('csrftoken');
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                            }
+                        }
+                    })
+                })
+            })
         })
     </script>
-{% block js %}
 
 {% endblock %}

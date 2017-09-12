@@ -18,7 +18,6 @@ class GroupListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     permission_required = "auth.view_group"
 
 class ModifyGroupView(View):
-
     #添加组
     def post(self, request):
         response = {}

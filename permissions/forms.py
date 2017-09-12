@@ -19,3 +19,7 @@ class CreatePermissionForm(forms.Form):
             return content_type
         except Exception as e:
             raise forms.ValidationError('模型不存在')
+
+class UpdatePermissionNameForm(forms.Form):
+    id = forms.IntegerField(required=True)
+    name = forms.CharField(required=True)

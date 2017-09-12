@@ -136,7 +136,6 @@ class ModifyUserStatusView(LoginRequiredMixin, View):
         response = {}
         if request.user.has_perm('auth.change_user'):
             uid = request.POST.get('uid', None)
-            print(uid)
             try:
                 user_obj = User.objects.get(id=uid)
                 if user_obj.is_active:

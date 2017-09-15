@@ -1,4 +1,4 @@
-from django.views.generic import ListView,TemplateView
+from django.views.generic import ListView, TemplateView, View
 from django.contrib.auth.models import Permission, ContentType
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -6,18 +6,24 @@ from django.db.models import Q
 from permissions.forms import CreatePermissionForm
 from permissions.forms import UpdatePermissionNameForm
 from django.http import JsonResponse, QueryDict
+from permissions.mixins import MyPermissionRequiredMixin
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import permission_required
 import json
 import traceback
 from django.db import connection
+
 # Create your views here.
 
-class PermissionListView(LoginRequiredMixin, ListView):
+class PermissionListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     template_name = "permissions_list.html"
     model = Permission
     paginate_by = 10
     before_range_num = 4
     after_range_num = 5
     ordering = 'id'
+
+    permission_required = 'auth.view_permission'
 
     def get_queryset(self):
         queryset = super(PermissionListView, self).get_queryset()
@@ -54,7 +60,18 @@ class PermissionListView(LoginRequiredMixin, ListView):
         print(context)
         return context
 
-class PermissionAddView(LoginRequiredMixin, TemplateView):
+class PermissionAddTplView(LoginRequiredMixin, MyPermissionRequiredMixin, TemplateView):
+    template_name = "permission_add.html"
+    permission_required = 'auth.add_permission'
+
+    def get_context_data(self, **kwargs):
+        context = super(PermissionAddTplView, self).get_context_data(**kwargs)
+        contentType_objs = ContentType.objects.values('id', 'app_label', 'model')
+        context['contenttypes'] = list(contentType_objs)
+        return context
+
+class PermissionAddView(LoginRequiredMixin, View):
+    '''独立templateview
     template_name = "permission_add.html"
 
     def get_context_data(self, **kwargs):
@@ -65,7 +82,8 @@ class PermissionAddView(LoginRequiredMixin, TemplateView):
 
         return context
 
-    '''
+
+    重写post方法引入form表单验证
     def post(self, request):
         content_type_id = request.POST.get('content_type', None)
         codename = request.POST.get('codename', None)
@@ -89,7 +107,7 @@ class PermissionAddView(LoginRequiredMixin, TemplateView):
             msg = "添加权限出错"
             return redirect("error", next="permission_add", msg=msg)
     '''
-
+    @method_decorator(permission_required('auth.add_permission'))
     def post(self, request):
         permission_form = CreatePermissionForm(request.POST)
         if permission_form.is_valid():
@@ -102,47 +120,58 @@ class PermissionAddView(LoginRequiredMixin, TemplateView):
         else:
             return redirect('error', next='permission_add', msg=json.dumps(json.load(permission_form.errors.as_json()), ensure_ascii=False))
 
+
     def get(self, request):
         response = {}
-        permission_id = request.GET.get('id', None)
-        if permission_id:
-            try:
-                permission_obj = Permission.objects.get(id=permission_id)
-                response['status'] = 0
-                response['permission_name'] = permission_obj.name
-                return JsonResponse(response)
-            except:
-                print(traceback.format_exc())
+        if request.user.has_perm('auth.view_permission'):
+            permission_id = request.GET.get('id', None)
+            if permission_id:
+                try:
+                    permission_obj = Permission.objects.get(id=permission_id)
+                    response['status'] = 0
+                    response['permission_name'] = permission_obj.name
+                    return JsonResponse(response)
+                except:
+                    print(traceback.format_exc())
+                    response['status'] = 1
+                    response['errmsg'] = '获取权限内容出错'
+                    return JsonResponse(response)
+            else:
                 response['status'] = 1
-                response['errmsg'] = '获取权限内容出错'
+                response['errmsg'] = '权限ip为空'
                 return JsonResponse(response)
         else:
             response['status'] = 1
-            response['errmsg'] = '权限ip为空'
+            response['errmsg'] = '没有查看权限的权限'
             return JsonResponse(response)
 
     def patch(self, request):
         response = {}
-        permission_form = UpdatePermissionNameForm(QueryDict(request.body))
-        if permission_form.is_valid():
-            permission_name = permission_form.cleaned_data.get('name')
-            permission_id = permission_form.cleaned_data.get('id')
-            print(permission_name)
-            print(permission_id)
-            try:
-                permission_obj = Permission.objects.get(id=permission_id)
-                permission_obj.name = permission_name
-                permission_obj.save()
-                response['status'] = 0
-                return JsonResponse(response)
-            except:
-                print(traceback.format_exc())
+        if request.user.has_perm('auth.change_permission'):
+            permission_form = UpdatePermissionNameForm(QueryDict(request.body))
+            if permission_form.is_valid():
+                permission_name = permission_form.cleaned_data.get('name')
+                permission_id = permission_form.cleaned_data.get('id')
+                print(permission_name)
+                print(permission_id)
+                try:
+                    permission_obj = Permission.objects.get(id=permission_id)
+                    permission_obj.name = permission_name
+                    permission_obj.save()
+                    response['status'] = 0
+                    return JsonResponse(response)
+                except:
+                    print(traceback.format_exc())
+                    response['status'] = 1
+                    response['errmsg'] = '更改permission name 出错'
+                    return JsonResponse(response)
+            else:
                 response['status'] = 1
-                response['errmsg'] = '更改permission name 出错'
+                response['errmsg'] = '缺少数据'
                 return JsonResponse(response)
         else:
             response['status'] = 1
-            response['errmsg'] = '缺少数据'
+            response['errmsg'] = '没有修改权限名的权限'
             return JsonResponse(response)
 
 

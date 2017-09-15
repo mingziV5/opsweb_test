@@ -17,7 +17,7 @@ class GroupListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     #指定权限
     permission_required = "auth.view_group"
 
-class ModifyGroupView(View):
+class ModifyGroupView(LoginRequiredMixin, View):
     #添加组
     def post(self, request):
         response = {}
@@ -147,7 +147,6 @@ class GroupPermissionList(LoginRequiredMixin, TemplateView):
         context["contenttypes"] = ContentType.objects.all()
         context["group"] = self.request.GET.get("gid", None)
         context["group_permissions"] = self.get_group_permissions(context["group"])
-        print(context)
         return context
 
     def get_group_permissions(self, groupid):
@@ -160,7 +159,6 @@ class GroupPermissionList(LoginRequiredMixin, TemplateView):
     def post(self, request):
         permission_id_list = request.POST.getlist("permission", [])
         groupid = request.POST.get("groupid", None)
-        print(groupid)
         try:
             group_obj = Group.objects.get(pk=groupid)
         except Group.DoesNotExist:

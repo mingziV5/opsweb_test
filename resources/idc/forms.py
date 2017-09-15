@@ -21,3 +21,15 @@ class CreateIdcForm(forms.Form):
     def clean(self):
         data = self.cleaned_data
         return data
+
+class UpdateIdcForm(forms.Form):
+    id = forms.IntegerField(required=True)
+    name = forms.CharField(required=True)
+    full_name = forms.CharField(required=True)
+    address = forms.CharField(required=True)
+    phone = forms.CharField(required=True)
+    email = forms.EmailField(required=True)
+    contact = forms.CharField(required=True)
+
+
+

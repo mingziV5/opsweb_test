@@ -4,14 +4,16 @@ from django.http import JsonResponse
 from resources.idc.models import Idc
 from django.http import QueryDict
 from django.contrib.auth.mixins import LoginRequiredMixin
+from permissions.mixins import MyPermissionRequiredMixin
 import traceback
 from resources.idc.forms import CreateIdcForm
+from resources.idc.forms import UpdateIdcForm
 # Create your views here.
 
 #通过页面submit提交
-class CreateIdcView(LoginRequiredMixin, TemplateView):
+class CreateIdcView(LoginRequiredMixin, MyPermissionRequiredMixin, TemplateView):
     template_name = "idc/add_idc.html"
-
+    permission_required = 'resources.add_idc'
     def post(self, request):
         #print(request.POST)
         #print(reverse("success", kwargs={"next": "user_list"}))
@@ -85,14 +87,14 @@ class CreateIdcView(LoginRequiredMixin, TemplateView):
         return redirect("success", next="idc_list")
     """
 
-class IdcListView(LoginRequiredMixin, ListView):
+class IdcListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     template_name = "idc/idc_list.html"
     model = Idc
     paginate_by = 10
     before_range_num = 4
     after_range_num = 5
     ordering = 'id'
-
+    permission_required = 'resources.view_idc'
     def get_queryset(self):
         queryset = super(IdcListView, self).get_queryset()
         queryset = queryset.values('id','name','full_name','contact','phone')
@@ -119,20 +121,22 @@ class ModifyIdcView(LoginRequiredMixin, View):
     def post(self, request):
         response = {}
         if request.user.has_perm('resources.add_idc'):
-            add_idc_form = request.POST.copy()
-            add_idc_form.pop('csrfmiddlewaretoken')
-            add_idc_dict = add_idc_form.dict()
-            try:
-                idc = Idc(**add_idc_dict)
-                idc.save()
-                response['status'] = 0
-                response['next_url'] = 'idc_list'
-                return JsonResponse(response)
-            except:
-                print(traceback.format_exc())
-                response['status'] = 1
-                response['errmsg'] = '添加idc信息错误'
-                return JsonResponse(response)
+            #add_idc_form = request.POST.copy()
+            #add_idc_form.pop('csrfmiddlewaretoken')
+            #add_idc_dict = add_idc_form.dict()
+            idc_form = CreateIdcForm(request.POST)
+            if idc_form.is_valid():
+                try:
+                    idc = Idc(**idc_form.cleaned_data)
+                    idc.save()
+                    response['status'] = 0
+                    response['next_url'] = 'idc_list'
+                    return JsonResponse(response)
+                except:
+                    print(traceback.format_exc())
+                    response['status'] = 1
+                    response['errmsg'] = '添加idc信息错误'
+                    return JsonResponse(response)
         else:
             response['status'] = 1
             response['errmsg'] = '没有添加idc权限'
@@ -189,28 +193,36 @@ class ModifyIdcView(LoginRequiredMixin, View):
         response = {}
         if request.user.has_perm('resources.change_idc'):
             data = QueryDict(request.body)
-            idc_id = data.get('id', None)
+            '''
             name = data.get('name', None)
             full_name = data.get('full_name', None)
             address = data.get('address', None)
             phone = data.get('phone', None)
             email = data.get('email', None)
             contact = data.get('contact', None)
-            try:
-                idc = Idc.objects.get(id=idc_id)
-                idc.name = name
-                idc.full_name = full_name
-                idc.address = address
-                idc.phone = phone
-                idc.email = email
-                idc.contact = contact
-                idc.save()
-                response['status'] = 0
-            except:
-                print(traceback.format_exc())
+            '''
+            update_idc_form = UpdateIdcForm(QueryDict(request.body))
+            if update_idc_form.is_valid():
+                try:
+                    idc_id = update_idc_form.cleaned_data.get('id')
+                    idc = Idc.objects.get(id=idc_id)
+                    idc.name = update_idc_form.cleaned_data.get('name')
+                    idc.full_name = update_idc_form.cleaned_data.get('full_name')
+                    idc.address = update_idc_form.cleaned_data.get('address')
+                    idc.phone = update_idc_form.cleaned_data.get('phone')
+                    idc.email = update_idc_form.cleaned_data.get('email')
+                    idc.contact = update_idc_form.cleaned_data.get('contact')
+                    idc.save()
+                    response['status'] = 0
+                except:
+                    print(traceback.format_exc())
+                    response['status'] = 1
+                    response['errmsg'] = '更新idc出错'
+                return JsonResponse(response)
+            else:
                 response['status'] = 1
-                response['errmsg'] = '更新idc出错'
-            return JsonResponse(response)
+                response['errmsg'] = '缺少数据'
+                return JsonResponse(response)
         else:
             response['status'] = 1
             response['errmsg'] = '没有修改idc权限'

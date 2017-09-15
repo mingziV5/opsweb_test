@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
+from permissions.mixins import MyPermissionRequiredMixin
 
 class UserLoginView(View):
     def post(self, request, *args, **kwargs):
@@ -193,13 +194,15 @@ class ModifyUserGroupView(LoginRequiredMixin, View):
             response['errmsg'] = '没有操作用户的权限'
             return JsonResponse(response)
 
-class SearchUserView(LoginRequiredMixin, ListView):
+class SearchUserView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     template_name = 'user/userlist.html'
     model = User
     paginate_by = 10
     before_range_num = 4
     after_range_num = 5
     ordering = 'id'
+
+    permission_required = 'auth.view_user'
 
     def get_queryset(self):
         queryset = super(SearchUserView, self).get_queryset()

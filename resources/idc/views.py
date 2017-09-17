@@ -113,7 +113,6 @@ class IdcListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super(IdcListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
-        print(context)
         return context
 
 class ModifyIdcView(LoginRequiredMixin, View):

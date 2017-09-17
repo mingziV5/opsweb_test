@@ -1,0 +1,64 @@
+{% extends 'public/layout.html' %}
+
+{% block breadcrunb %}
+<li><a href="#">资源管理</a><span class="divider"></span></li>
+<li class="active">服务器列表</li>
+{% endblock %}
+
+{% block body %}
+    <table class='table table-striped'>
+        <tr>
+            <th>序号</th>
+            <th>主机名</th>
+            <th>内网IP</th>
+            <th>OS</th>
+            <th>最后检查时间</th>
+            <th>操作</th>
+        </tr>
+        {% for server_obj in page_obj.object_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ server_obj.hostname }}</td>
+            <td>{{ server_obj.inner_ip }}</td>
+            <td>{{ server_obj.os }}</td>
+            <td>{{ server_obj.check_update_time }}</td>
+            <td>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info btn-sm update_idc"  data="{{ server_obj.id  }}">修改</button>
+                    <button type="button" class="btn btn-sm btn-warning del_idc"  data="{{ server_obj.id }}">删除</button>
+                </div>
+
+            </td>
+        </tr>
+        {% endfor%}
+    </table>
+
+    <div class="center-block">
+        <ul class='pagination center-block'>
+            <li><a href="{% url 'server_list' %}?page=1">首页</a></li>
+            {% if page_obj.has_previous %}
+            <li><a href="{% url 'server_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
+            {% else %}
+            <li><a>上一页</a></li>
+            {% endif %}
+            {% for p in page_range_obj %}
+                {% if p == page_obj.number %}
+                <li class='active'><a href="{% url 'server_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% else %}
+                <li><a href="{% url 'server_list' %}?page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li><a href="{% url 'server_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
+            {% else %}
+            <li><a>下一页</a></li>
+            {% endif %}
+            <li><a href="{% url 'server_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
+        </ul>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+
+{% endblock %}

@@ -1,6 +1,6 @@
 from django.views.generic import View, TemplateView
 from django.contrib.auth.models import User
-from resources.models import Product
+from resources.product.models import Product
 from resources.product.form import AddProductForm
 from django.shortcuts import redirect
 import json

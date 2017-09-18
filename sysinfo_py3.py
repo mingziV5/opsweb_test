@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # coding:utf-8
-# author: rongjunfeng
 
 import json
 import subprocess
@@ -13,7 +12,7 @@ import requests
 
 
 
-device_white = ['eth0','eth1', 'eth2', 'eth3', 'bond0', 'bond1', 'enp0s3', 'enp0s8']
+device_white = ['eth', 'bond', 'enp0s', 'em']
 
 def get_hostname():
     return socket.gethostname()
@@ -21,7 +20,10 @@ def get_hostname():
 def get_device_info():
     ret = []
     for device, info in psutil.net_if_addrs().items():
-        if device in device_white:
+        device_main = device
+        if device[-1].isdigit():
+            device_main = device[:-1]
+        if device_main in device_white:
             device_info = {'device': device}
             for snic in info:
                 if snic.family == 2:
@@ -73,9 +75,12 @@ def get_disk():
 def get_Manufacturer():
     cmd = """/usr/sbin/dmidecode | grep -A6 'System Information'"""
     ret = {}
+    ret['vm_status'] = 1
     manufacturer_data = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in manufacturer_data.stdout.readlines():
         str_line = line.decode().strip()
+        if "VMware" in str_line or "VirtualBox" in str_line or "Cloud" in str_line:
+            ret['vm_status'] = 0
         if "Manufacturer" in str_line:
             ret['manufacturers'] = str_line.split(': ')[1]
         elif "Product Name" in str_line:
@@ -96,7 +101,7 @@ def get_os_version():
     return " ".join(platform.linux_distribution())
 
 def get_innerIp(ipinfo):
-    inner_device = ["eth1", "bond0", "enp0s8"]
+    inner_device = ["eth1", "bond0", "em1", "enp0s8"]
     ret = {}
     for info in ipinfo:
         if info.get("ip", None) and info.get('device', None) in inner_device:
@@ -109,6 +114,7 @@ def get_innerIp(ipinfo):
 def run():
     data = {}
     data['hostname'] = get_hostname()
+    data['ip_info'] = get_device_info()
     data.update(get_innerIp(get_device_info()))
     cpuinfo = get_cpuinfo()
     data['server_cpu'] = "{cpu} {num}".format(**cpuinfo)
@@ -117,14 +123,6 @@ def run():
     data.update( get_Manufacturer())
     data['manufacture_date'] = get_rel_date()
     data['os'] = get_os_version()
-    try:
-        if "VMware" in data['manufacturers']:
-            data['vm_status'] = 0
-        else:
-            data['vm_status'] = 1
-    except KeyError:
-        raise Exception("run as root")
-    print(data)
     send(data)
 
 def send(data):

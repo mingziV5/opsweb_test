@@ -1,8 +1,9 @@
 from django.views.generic import View, ListView
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from resources.idc.models import Server
+from resources.server.models import Server, ServerStatus
 import datetime
+import traceback
 
 @csrf_exempt
 def ServerInfoAutoReport(request):
@@ -19,14 +20,17 @@ def ServerInfoAutoReport(request):
             '''
         except Server.DoesNotExist:
             s = Server(**data)
+            server_status_obj = ServerStatus.objects.get(pk=1)
+            s.status = server_status_obj
             s.save()
-        return HttpResponse(" ")
+        return HttpResponse("success")
+    else:
+        return HttpResponse("method error")
 
 class ServerListView(ListView):
     model = Server
     paginate_by = 10
     template_name = "server/server_list.html"
-
     before_range_num = 4
     after_range_num = 5
 

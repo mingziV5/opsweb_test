@@ -62,7 +62,7 @@ def run():
     data['manufacture_date'] = '2006-12-01'
     data['os'] = 'CentOS 6.6 Final'
     data['sn'] = '0'
-    for i in range(1,800):
+    for i in range(1,300):
         data['uuid'] = get_uuid() 
         data['mac_address'] = get_mac_address()
         data['hostname'] = hostname.__next__()

@@ -13,6 +13,7 @@
             <th>内网IP</th>
             <th>OS</th>
             <th>最后检查时间</th>
+            <th>状态</th>
             <th>操作</th>
         </tr>
         {% for server_obj in page_obj.object_list %}
@@ -22,12 +23,12 @@
             <td>{{ server_obj.inner_ip }}</td>
             <td>{{ server_obj.os }}</td>
             <td>{{ server_obj.check_update_time }}</td>
+            <td>{{ server_obj.status.name }}</td>
             <td>
                 <div class="btn-group">
                     <button type="button" class="btn btn-info btn-sm update_idc"  data="{{ server_obj.id  }}">修改</button>
                     <button type="button" class="btn btn-sm btn-warning del_idc"  data="{{ server_obj.id }}">删除</button>
                 </div>
-
             </td>
         </tr>
         {% endfor%}

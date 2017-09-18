@@ -1,5 +1,5 @@
 from django import forms
-from resources.models import Product
+from resources.product.models import Product
 from django.contrib.auth.models import User
 
 class AddProductForm(forms.Form):

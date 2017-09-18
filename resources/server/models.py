@@ -1,6 +1,9 @@
-'''
 from django.db import models
 from resources.idc.models import Idc
+
+class ServerStatus(models.Model):
+    name = models.CharField(max_length=20)
+
 
 class Server(models.Model):
     supplier = models.IntegerField(null=True)
@@ -17,7 +20,8 @@ class Server(models.Model):
     server_cpu = models.CharField(max_length=250, null=True)
     server_disk = models.CharField(max_length=100, null=True)
     server_mem = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=100,db_index=True, null=True)
+    #status = models.CharField(max_length=100,db_index=True, null=True)
+    status = models.ForeignKey(ServerStatus, null=True)
     remark = models.TextField(null=True)
     service_id = models.IntegerField(db_index=True, null=True)
     server_purpose = models.IntegerField(db_index=True, null=True)
@@ -31,4 +35,3 @@ class Server(models.Model):
     class Meta:
         db_table = 'resources_server'
         ordering = ['id']
-'''

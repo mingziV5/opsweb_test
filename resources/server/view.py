@@ -1,7 +1,9 @@
 from django.views.generic import View, ListView
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from resources.server.models import Server, ServerStatus
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import QueryDict
 import datetime
 import traceback
 
@@ -48,3 +50,39 @@ class ServerListView(ListView):
         context = super(ServerListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
         return context
+
+class ModifyServerStatusView(LoginRequiredMixin, View):
+    def get(self, request):
+        sid = request.GET.get('sid', None)
+        server_status_objs = ServerStatus.objects.all()
+        try:
+            server_obj = Server.objects.get(pk=sid)
+        except Server.DoesNotExist:
+            pass
+        return JsonResponse(list(server_status_objs.values('id', 'name')), safe=False)
+
+    def patch(self, request):
+        response = {'status': 0}
+        data = QueryDict(request.body)
+        sid = data.get('sid', None)
+        ssid = data.get('ssid', None)
+        try:
+            server_obj = Server.objects.get(pk=sid)
+        except Server.DoesNotExist:
+            response['status'] = 1
+            response['errmsg'] = '服务器不存在'
+            return JsonResponse(response)
+        try:
+            server_status_obj = ServerStatus.objects.get(pk=ssid)
+        except ServerStatus.DoesNotExist:
+            response['status'] = 1
+            response['errmsg'] = '服务器状态不存在'
+            return JsonResponse(response)
+        try:
+            server_obj.status = server_status_obj
+            server_obj.save()
+        except:
+            response['status'] = 1
+            response['errmsg'] = '更改服务器状态出错'
+            return JsonResponse(response)
+        return JsonResponse(response)

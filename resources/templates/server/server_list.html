@@ -26,8 +26,14 @@
             <td>{{ server_obj.status.name }}</td>
             <td>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-info btn-sm update_idc"  data="{{ server_obj.id  }}">修改</button>
-                    <button type="button" class="btn btn-sm btn-warning del_idc"  data="{{ server_obj.id }}">删除</button>
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                        修改
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                        <li role="presentation"><a role="menuitem" tabindex="-1" class="modify_server_status" href="#" data='{"sid":"{{ server_obj.id }}", "hname": "{{ server_obj.hostname }}"}'>修改机器状态</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">修改归属信息</a></li>
+                    </ul>
                 </div>
             </td>
         </tr>
@@ -58,8 +64,74 @@
         </ul>
     </div>
 
+    <div class="modal fade" id="server_change_status_modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 id="server_change_status_modal_title"></h4>
+                </div>
+                <div class="modal-body clearfix">
+                    <div class="col-xs-8" id="select_server_status">
+                        <select class="chosen-select chosen-transparent form-control" id="all_server_status">
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="server_change_status_btn">提交</button>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block js %}
+    <script>
+        $(function(){
+            var sid
+            $('.modify_server_status').click(function(){
+                var data = $.parseJSON($(this).attr('data'))
+                console.log(data)
+                sid = data.sid
+                $("#server_change_status_modal_title").html("修改主机 <b>" + data.hname + "</b> 的状态")
+                $('#server_change_status_modal').modal('show')
+                $.get("{% url 'server_status_modify' %}", {'sid': sid}, function(res){
+                    html = "<option value=0 >请选择状态</option>";
+                    $.each(res, function(index, value){
+                        html += '<option value="'+ value.id +'"> '+ value.name+'</option>'
+                    })
+                    $("#all_server_status").html(html)
+                    //$("#all_user_group_chosen").css('width', '100%')
+                    $("#all_server_status").trigger("chosen:updated")
+                })
+            })
 
+            $("#server_change_status_btn").click(function(){
+                var ssid = $("#all_server_status").val()
+                $('#server_change_status_modal').modal('hide');
+                $.ajax({
+                    url: "{% url 'server_status_modify' %}",
+                    type: "patch",
+                    data: {"sid": sid, 'ssid': ssid},
+                    success: function(res){
+                        if (res.status != 0){
+                            swal("操作失败", res.errmsg, "error")
+                        } else {
+                            swal("操作成功", '', 'success')
+                        }
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                })
+            })
+        })
+    </script>
 {% endblock %}

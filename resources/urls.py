@@ -10,7 +10,8 @@ urlpatterns = [
     ])),
     url(r'^server/', include([
         url(r'report/$', server.view.ServerInfoAutoReport, name="server_report"),
-        url(r'list/$', server.view.ServerListView.as_view(), name="server_list")
+        url(r'list/$', server.view.ServerListView.as_view(), name="server_list"),
+        url(r'status/$', server.view.ModifyServerStatusView.as_view(), name="server_status_modify"),
     ])),
     url(r'^product/', include([
         url(r'add/$', product.view.AddProductView.as_view(), name="product_add")

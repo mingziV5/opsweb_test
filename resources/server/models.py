@@ -4,7 +4,6 @@ from resources.idc.models import Idc
 class ServerStatus(models.Model):
     name = models.CharField(max_length=20)
 
-
 class Server(models.Model):
     supplier = models.IntegerField(null=True)
     manufacturers = models.CharField(max_length=50, null=True)

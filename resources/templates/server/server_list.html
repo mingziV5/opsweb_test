@@ -11,6 +11,8 @@
             <th>序号</th>
             <th>主机名</th>
             <th>内网IP</th>
+            <th>业务线</th>
+            <th>产品线</th>
             <th>OS</th>
             <th>最后检查时间</th>
             <th>状态</th>
@@ -21,6 +23,8 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ server_obj.hostname }}</td>
             <td>{{ server_obj.inner_ip }}</td>
+            <td>{{ server_obj.service_id|default_if_none:"" }}</td>
+            <td>{{ server_obj.server_purpose|default_if_none:"" }}</td>
             <td>{{ server_obj.os }}</td>
             <td>{{ server_obj.check_update_time }}</td>
             <td>{{ server_obj.status.name }}</td>
@@ -32,7 +36,7 @@
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
                         <li role="presentation"><a role="menuitem" tabindex="-1" class="modify_server_status" href="#" data='{"sid":"{{ server_obj.id }}", "hname": "{{ server_obj.hostname }}"}'>修改机器状态</a></li>
-                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">修改归属信息</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'server_modify_product' %}?id={{ server_obj.id }}&next={{ request.get_full_path|urlencode }}">修改归属信息</a></li>
                     </ul>
                 </div>
             </td>

@@ -26,7 +26,8 @@ urlpatterns = [
         ])),
         url(r'^search/', include([
             url(r'^username/$', user.views.SearchUserView.as_view(), name='user_search'),
-        ]))
+        ])),
+        url(r'^get/$', user.views.GetUserListView.as_view(), name='user_list_get'),
     ])),
 
     url(r'^group/', include([

@@ -4,6 +4,7 @@ from django.template import Context, loader
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.urls import reverse
+from django.utils.http import unquote_plus
 # login_required 默认会跳转到/accounts/login/ 可以在settings文件中修改LOGIN_URL来修改，后面还会加上你请求的url作为next的参数，做登陆跳转
 # Create your views here.
 
@@ -65,12 +66,10 @@ class SuccessView(TemplateView):
         context = super(SuccessView, self).get_context_data(**kwargs)
         success_name = self.kwargs.get("next", "")
 
-        next_url = "/"
         try:
             next_url = reverse(success_name)
         except:
-            pass
-
+            next_url = unquote_plus(success_name)
         context['next_url'] = next_url
         return context
 
@@ -81,11 +80,10 @@ class ErrorView(TemplateView):
         context = super(ErrorView, self).get_context_data(**kwargs)
         error_name = self.kwargs.get("next", "")
         errmsg = self.kwargs.get('msg', "")
-        next_url = "/"
         try:
             next_url = reverse(error_name)
         except:
-            pass
+            next_url = unquote_plus(error_name)
         context['next_url'] = next_url
         context['errmsg'] = errmsg
         return context

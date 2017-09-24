@@ -12,8 +12,15 @@ urlpatterns = [
         url(r'report/$', server.view.ServerInfoAutoReport, name="server_report"),
         url(r'list/$', server.view.ServerListView.as_view(), name="server_list"),
         url(r'status/$', server.view.ModifyServerStatusView.as_view(), name="server_status_modify"),
+        url(r'get/$', server.view.GetServerListView.as_view(), name="server_get"),
+        url(r'modify/', include([
+            url(r'product/$', server.view.ServerModifyProductView.as_view(), name="server_modify_product")
+        ]))
     ])),
     url(r'^product/', include([
-        url(r'add/$', product.view.AddProductView.as_view(), name="product_add")
+        url(r'add/$', product.view.AddProductView.as_view(), name="product_add"),
+        url(r'ztreetest/$', product.view.ZnodeView.as_view(), name="product_ztree_test"),
+        url(r'get/$', product.view.ProductGetView.as_view(), name="product_get"),
+        url(r'manage/$', product.view.ProductManageView.as_view(), name="product_manage"),
     ]))
 ]

@@ -1,11 +1,13 @@
-from django.views.generic import View, ListView
-from django.http import HttpResponse, JsonResponse
+from django.views.generic import View, ListView, TemplateView
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from resources.server.models import Server, ServerStatus
+from resources.product.models import Product
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import QueryDict
+from django.shortcuts import get_object_or_404, redirect, reverse
+from django.utils.http import urlquote_plus
 import datetime
-import traceback
 
 @csrf_exempt
 def ServerInfoAutoReport(request):
@@ -86,3 +88,44 @@ class ModifyServerStatusView(LoginRequiredMixin, View):
             response['errmsg'] = '更改服务器状态出错'
             return JsonResponse(response)
         return JsonResponse(response)
+
+class GetServerListView(View):
+    def get(self, request):
+        server_purpose = request.GET.get("server_purpose", None)
+        #获取某台机器的所有信息
+        #获取某个业务线下的所有机器列表
+        if server_purpose:
+            queryset = Server.objects.filter(server_purpose=server_purpose).values("id", "hostname", "inner_ip")
+            #queryset = Server.objects.values("id", "hostname", "inner_ip")
+            return JsonResponse(list(queryset), safe=False)
+        return JsonResponse([], safs=False)
+
+class ServerModifyProductView(TemplateView):
+    template_name = "server/server_modify_product.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ServerModifyProductView, self).get_context_data(**kwargs)
+        server_id = self.request.GET.get("id", None)
+        context['server'] = get_object_or_404(Server, pk=server_id)
+        context['products'] = Product.objects.filter(pid=0)
+        return context
+
+    def post(self, request):
+        next_url = request.GET.get("next", None) if request.GET.get('next', None) else 'server_list'
+        server_id = request.POST.get('id', None)
+        service_id = request.POST.get('service_id', None)
+        server_purpose = request.POST.get('server_purpose', None)
+
+        try:
+            server_obj = Server.objects.get(pk=server_id)
+            product_service_id = Product.objects.get(pk=service_id)
+            product_server_purpose = Product.objects.get(pk=server_purpose)
+        except:
+            return redirect("error", next="server_list", msg="传参错误")
+
+        if product_server_purpose.pid != product_service_id.id:
+            return Http404
+        server_obj.service_id = product_service_id.id
+        server_obj.server_purpose = product_server_purpose.id
+        server_obj.save(update_fields=["service_id", "server_purpose"])
+        return redirect(reverse("success", kwargs={"next": urlquote_plus(next_url)}))

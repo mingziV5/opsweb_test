@@ -8,6 +8,9 @@ from django.http import QueryDict
 from django.shortcuts import get_object_or_404, redirect, reverse
 from django.utils.http import urlquote_plus
 import datetime
+import traceback
+from opsweb.utils import GetLogger
+from django.db.models import Q
 
 @csrf_exempt
 def ServerInfoAutoReport(request):
@@ -22,11 +25,13 @@ def ServerInfoAutoReport(request):
             s.check_update_time = datatime.now()
             s.save(update_fields=['hostname'])
             '''
+            GetLogger().get_logger().info('ServerInfoAutoReport ok')
         except Server.DoesNotExist:
             s = Server(**data)
             server_status_obj = ServerStatus.objects.get(pk=1)
             s.status = server_status_obj
             s.save()
+            GetLogger().get_logger().error('%s' %traceback.format_exc())
         return HttpResponse("success")
     else:
         return HttpResponse("method error")
@@ -60,7 +65,7 @@ class ModifyServerStatusView(LoginRequiredMixin, View):
         try:
             server_obj = Server.objects.get(pk=sid)
         except Server.DoesNotExist:
-            pass
+            GetLogger().get_logger().error('%s' % traceback.format_exc())
         return JsonResponse(list(server_status_objs.values('id', 'name')), safe=False)
 
     def patch(self, request):
@@ -70,22 +75,28 @@ class ModifyServerStatusView(LoginRequiredMixin, View):
         ssid = data.get('ssid', None)
         try:
             server_obj = Server.objects.get(pk=sid)
+            GetLogger().get_logger().info('patch1 ok')
         except Server.DoesNotExist:
             response['status'] = 1
             response['errmsg'] = '服务器不存在'
+            GetLogger().get_logger().error('%s' % traceback.format_exc())
             return JsonResponse(response)
         try:
             server_status_obj = ServerStatus.objects.get(pk=ssid)
+            GetLogger().get_logger().info('patch2 ok')
         except ServerStatus.DoesNotExist:
             response['status'] = 1
             response['errmsg'] = '服务器状态不存在'
+            GetLogger().get_logger().error('%s' % traceback.format_exc())
             return JsonResponse(response)
         try:
             server_obj.status = server_status_obj
             server_obj.save()
+            GetLogger().get_logger().info('patch3 ok')
         except:
             response['status'] = 1
             response['errmsg'] = '更改服务器状态出错'
+            GetLogger().get_logger().error('%s' % traceback.format_exc())
             return JsonResponse(response)
         return JsonResponse(response)
 
@@ -107,7 +118,8 @@ class ServerModifyProductView(TemplateView):
         context = super(ServerModifyProductView, self).get_context_data(**kwargs)
         server_id = self.request.GET.get("id", None)
         context['server'] = get_object_or_404(Server, pk=server_id)
-        context['products'] = Product.objects.filter(pid=0)
+        context['products'] = Product.objects.filter(Q(pid=0)|Q(pid=server_id))
+        print(context['products'])
         return context
 
     def post(self, request):
@@ -115,12 +127,13 @@ class ServerModifyProductView(TemplateView):
         server_id = request.POST.get('id', None)
         service_id = request.POST.get('service_id', None)
         server_purpose = request.POST.get('server_purpose', None)
-
         try:
             server_obj = Server.objects.get(pk=server_id)
             product_service_id = Product.objects.get(pk=service_id)
             product_server_purpose = Product.objects.get(pk=server_purpose)
+            GetLogger().get_logger().info('ServerModifyProductView ok')
         except:
+            GetLogger().get_logger().error('%s' % traceback.format_exc())
             return redirect("error", next="server_list", msg="传参错误")
 
         if product_server_purpose.pid != product_service_id.id:

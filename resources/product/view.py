@@ -24,12 +24,12 @@ class AddProductView(TemplateView):
             product = Product(**product_form.cleaned_data)
             try:
                 product.save()
-                return redirect("success", next="idc_list")
+                return redirect("success", next="product_manage")
             except Exception as e:
                 print(traceback.format_exc())
-                return redirect("error", next="idc_list", msg=e.args)
+                return redirect("error", next="product_manage", msg=e.args)
         else:
-            return redirect("error", next="idc_list",
+            return redirect("error", next="product_manage",
                             msg=json.dumps(json.loads(product_form.errors.as_json()), ensure_ascii=False))
 
 class ZnodeView(View):

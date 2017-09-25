@@ -8,4 +8,4 @@ class Product(models.Model):
     pid = models.IntegerField('上级业务线id', db_index=True)
 
     def __str__(self):
-        return self.service_namec
+        return self.service_name

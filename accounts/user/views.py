@@ -113,6 +113,7 @@ class UserListView(LoginRequiredMixin, ListView):
         return range(start, end+1)
 
     def get_context_data(self, **kwargs):
+        self.set_paginate_by(2)
         context = super(UserListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
 
@@ -125,6 +126,10 @@ class UserListView(LoginRequiredMixin, ListView):
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
         return context
+
+    def set_paginate_by(self, user_paginate_by):
+        if user_paginate_by:
+            self.paginate_by = user_paginate_by
 
     #权限验证，类视图，需要装饰在view的get方法上，没有get方法重写get方法
     @method_decorator(permission_required("auth.add_user",login_url=reverse_lazy("error" ,kwargs={"next":"index", "msg":"没有相应的权限"})))

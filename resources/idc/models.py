@@ -12,3 +12,5 @@ class Idc(models.Model):
     class Meta:
         db_table = "resources_idc"
 
+    def __str__(self):
+        return self.full_name

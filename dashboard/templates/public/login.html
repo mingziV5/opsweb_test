@@ -45,7 +45,7 @@
 
 <script type="text/javascript" src="/static/vendor/alert/sweet-alert.min.js"></script>
 <script type="text/javascript" src="/static/vendor/jquery/jquery.min.js"></script>
-
+<script type="text/javascript" src="/static/vendor/jquery/jquery.cookie.js"></script>
 <script type="text/javascript">
 /* 忘记密码提示*/
 $("#forget").click(function() {
@@ -58,6 +58,7 @@ $('#loginform').on('submit',function(){
     var str = $('#loginform').serialize();
     $.post('#',str,function(res){
         if (res.status == 0){
+            $.cookie('__isActiveMenu', null, { expires: 7, path: '/'})
             location.href=res.next_url
         }else{
             swal({

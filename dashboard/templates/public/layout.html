@@ -197,6 +197,25 @@ button.detail{
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
         }
+
+        $(function ($) {
+            var menu = $(".menu-link")
+            var __activeId = $.cookie('__isActiveMenu')
+            if(__activeId!="undefined"&&__activeId){
+                $(menu[__activeId]).addClass("active")
+                $(menu[__activeId]).parent().parent().attr("aria-expanded", "true")
+                $(menu[__activeId]).parent().parent().attr("class", "nav nav-second-level collapse in")
+                $(menu[__activeId]).parent().parent().parent().addClass("active");
+            }
+
+            menu.each(function(e, n){
+                $(n).click(function(){
+                    $.cookie('__isActiveMenu', e, { expires: 7, path: '/'})
+                    window.location.href = $(this).attr("href")
+                })
+            })
+        })
+
     </script>
     {% block js %}
 

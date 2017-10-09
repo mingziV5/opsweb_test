@@ -11,10 +11,12 @@ class IdcAdmin(admin.ModelAdmin):
 class ServerAdmin(admin.ModelAdmin):
     list_display = ('hostname', 'inner_ip')
     search_fields = ('hostname', 'inner_ip')
+    list_filter = ('check_update_time', )
     date_hierarchy = 'check_update_time'
+    #filter_horizontal = ('hostname', )
 
 admin.site.register(Idc, IdcAdmin)
 admin.site.register(Product)
-admin.site.register(Server)
+admin.site.register(Server, ServerAdmin)
 admin.site.register(ServerStatus)
 

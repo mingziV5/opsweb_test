@@ -8,12 +8,14 @@
         <tr>
             <th>#</th>
             <th>组名</th>
+            <th>成员数量</th>
             <th>操作</th>
         </tr>
         {% for group_obj in object_list %}
         <tr>
             <td>{{ group_obj.id }}</td>
             <td>{{ group_obj.name }}</td>
+            <td>{{ group_obj.user_set.count }}</td>
             <td>
                 <button type="button" class="btn btn-primary btn-sm users_in_group" groupid="{{ group_obj.id }}">成员列表</button>
                 <button type="button" class="btn btn-primary btn-sm permission_in_group" groupid="{{ group_obj.id }}">查看权限</button>

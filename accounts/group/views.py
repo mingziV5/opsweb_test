@@ -17,6 +17,10 @@ class GroupListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     #指定权限
     permission_required = "auth.view_group"
 
+    def get_context_data(self, **kwargs):
+        context = super(GroupListView, self).get_context_data(**kwargs)
+        return context
+
 class ModifyGroupView(LoginRequiredMixin, View):
     #添加组
     def post(self, request):

@@ -200,7 +200,9 @@ button.detail{
 
         $(function ($) {
             var menu = $(".menu-link")
+            var menus = $('#side-menu').children('li').children("a[href!='#']")
             var __activeId = $.cookie('__isActiveMenu')
+            var __activeIds = $.cookie('__isActiveMenus')
             if(__activeId!="undefined"&&__activeId){
                 $(menu[__activeId]).addClass("active")
                 $(menu[__activeId]).parent().parent().attr("aria-expanded", "true")
@@ -208,10 +210,23 @@ button.detail{
                 $(menu[__activeId]).parent().parent().parent().addClass("active");
             }
 
+            if(__activeIds!="undefined"&&__activeIds) {
+                $(menus[__activeIds]).addClass("active")
+            }
+
             menu.each(function(e, n){
                 $(n).click(function(){
+                    $.cookie('__isActiveMenus', null, { expires: 7, path: '/'})
                     $.cookie('__isActiveMenu', e, { expires: 7, path: '/'})
                     window.location.href = $(this).attr("href")
+                })
+            })
+
+            menus.each(function(e, n){
+                $(n).click(function(){
+                    $.cookie('__isActiveMenu', null, { expires: 7, path: '/'})
+                    $.cookie('__isActiveMenus', e, { expires: 7, path: '/'})
+                    window.location.href=$(this).attr('href')
                 })
             })
         })

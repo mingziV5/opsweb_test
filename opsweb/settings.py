@@ -201,4 +201,4 @@ ADMINS = {
     ('TEST', 'ming_v5@sina.com'),
 }
 
-SERVER_EMAIL = 'ming_v5@163.com'
+SERVER_EMAIL = 'ming_v5@sina.com'

@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.db import IntegrityError
 from django.http import QueryDict
 from django.shortcuts import redirect
+from opsweb.utils import GetLogger
 import traceback
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -40,6 +41,7 @@ class ModifyGroupView(LoginRequiredMixin, View):
             except IntegrityError:
                 response['status'] =1
                 response['errmsg'] = '用户组以存在'
+                GetLogger().get_logger().error(traceback.format_exc())
             except:
                 response['status'] = 1
                 response['errmsg'] = '添加用户组失败'
@@ -72,7 +74,7 @@ class ModifyGroupView(LoginRequiredMixin, View):
                 response['status'] == 0
                 return JsonResponse(response)
             except:
-                print(traceback.format_exc())
+                GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] == 1
                 response['errmsg'] == '删除组出错'
                 return JsonResponse(response)
@@ -104,7 +106,7 @@ class GroupMemberListView(LoginRequiredMixin, View):
                 response['list_members'] = list_members
                 return JsonResponse(response)
             except:
-                print(traceback.format_exc())
+                GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '查找组成员错误'
                 return JsonResponse(response)
@@ -134,7 +136,7 @@ class GroupMemberListView(LoginRequiredMixin, View):
                 return JsonResponse(response)
 
             except:
-                print(traceback.format_exc())
+                GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '删除组成员错误'
                 return JsonResponse(response)
@@ -191,9 +193,9 @@ class GroupPermissionListAjax(LoginRequiredMixin, View):
                 response['status'] = 0
                 return JsonResponse(response)
             except:
-                print(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '查找权限异常'
+                GetLogger().get_logger().error(traceback.format_exc())
                 return JsonResponse(response)
         else:
             response['status'] = 1

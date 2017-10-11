@@ -8,6 +8,7 @@ from resources.product.form import AddProductForm
 from django.shortcuts import redirect
 import json
 import traceback
+from opsweb.utils import GetLogger
 
 class AddProductView(TemplateView):
     template_name = 'product/add_product.html'
@@ -26,7 +27,7 @@ class AddProductView(TemplateView):
                 product.save()
                 return redirect("success", next="product_manage")
             except Exception as e:
-                print(traceback.format_exc())
+                GetLogger().get_logger().error(traceback.format_ext())
                 return redirect("error", next="product_manage", msg=e.args)
         else:
             return redirect("error", next="product_manage",

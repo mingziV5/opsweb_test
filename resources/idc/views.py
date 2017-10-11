@@ -8,6 +8,7 @@ from permissions.mixins import MyPermissionRequiredMixin
 import traceback
 from resources.idc.forms import CreateIdcForm
 from resources.idc.forms import UpdateIdcForm
+from opsweb.utils import GetLogger
 # Create your views here.
 
 #通过页面submit提交
@@ -25,7 +26,7 @@ class CreateIdcView(LoginRequiredMixin, MyPermissionRequiredMixin, TemplateView)
             idc.save()
             return redirect("success", next="idc_list")
         except:
-            print(traceback.format_exc())
+            GetLogger().get_logger().error(traceback.format_exc())
             errmsg = '添加idc信息错误'
             return redirect("error", next="idc_add", msg=errmsg)
         #操作成功
@@ -132,7 +133,7 @@ class ModifyIdcView(LoginRequiredMixin, View):
                     response['next_url'] = 'idc_list'
                     return JsonResponse(response)
                 except:
-                    print(traceback.format_exc())
+                    GetLogger.get_logger(traceback.format_exc())
                     response['status'] = 1
                     response['errmsg'] = '添加idc信息错误'
                     return JsonResponse(response)
@@ -175,10 +176,10 @@ class ModifyIdcView(LoginRequiredMixin, View):
                 idc = Idc.objects.filter(id=idc_id).values('id','name', 'full_name', 'address', 'phone', 'email', 'contact')
                 response['status'] = 0
                 response['idc_obj'] = list(idc)[0]
-                print(response)
+                GetLogger().get_logger().info('Get idc object success')
                 return JsonResponse(response)
             except:
-                print(traceback.format_exc())
+                GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '查询出错'
                 return JsonResponse(response)
@@ -214,7 +215,7 @@ class ModifyIdcView(LoginRequiredMixin, View):
                     idc.save()
                     response['status'] = 0
                 except:
-                    print(traceback.format_exc())
+                    GetLogger().get_logger().error(traceback.format_exc())
                     response['status'] = 1
                     response['errmsg'] = '更新idc出错'
                 return JsonResponse(response)
@@ -238,7 +239,7 @@ class ModifyIdcView(LoginRequiredMixin, View):
                 response['status'] = 0
                 return JsonResponse(response)
             except:
-                print(traceback.fomat_exc())
+                GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '删除idc出错'
         else:

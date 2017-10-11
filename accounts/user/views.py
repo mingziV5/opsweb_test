@@ -10,6 +10,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
 from permissions.mixins import MyPermissionRequiredMixin
+from opsweb.utils import GetLogger
+import traceback
 
 class UserLoginView(View):
     def post(self, request, *args, **kwargs):
@@ -237,7 +239,7 @@ class SearchUserView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
         try:
             search_data.pop("page")
         except:
-            pass
+            GetLogger.get_logger().error(traceback.format_exc())
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
         return context

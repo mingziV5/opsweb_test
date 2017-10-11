@@ -11,6 +11,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 import json
 import traceback
+from opsweb.utils import GetLogger
 from django.db import connection
 
 # Create your views here.
@@ -26,7 +27,8 @@ class PermissionListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView
     permission_required = 'auth.view_permission'
 
     def get_queryset(self):
-        queryset = super(PermissionListView, self).get_queryset()
+        #调用父类的queryset
+        #queryset = super(PermissionListView, self).get_queryset()
         #获得搜索内容
         queryset = Permission.objects.all()
         search_value = self.request.GET.get('search_value', None)
@@ -57,7 +59,6 @@ class PermissionListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView
             pass
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
-        print(context)
         return context
 
 class PermissionAddTplView(LoginRequiredMixin, MyPermissionRequiredMixin, TemplateView):
@@ -132,9 +133,9 @@ class PermissionAddView(LoginRequiredMixin, View):
                     response['permission_name'] = permission_obj.name
                     return JsonResponse(response)
                 except:
-                    print(traceback.format_exc())
                     response['status'] = 1
                     response['errmsg'] = '获取权限内容出错'
+                    GetLogger().get_logger().error(traceback.format_exc())
                     return JsonResponse(response)
             else:
                 response['status'] = 1
@@ -152,8 +153,6 @@ class PermissionAddView(LoginRequiredMixin, View):
             if permission_form.is_valid():
                 permission_name = permission_form.cleaned_data.get('name')
                 permission_id = permission_form.cleaned_data.get('id')
-                print(permission_name)
-                print(permission_id)
                 try:
                     permission_obj = Permission.objects.get(id=permission_id)
                     permission_obj.name = permission_name
@@ -161,7 +160,7 @@ class PermissionAddView(LoginRequiredMixin, View):
                     response['status'] = 0
                     return JsonResponse(response)
                 except:
-                    print(traceback.format_exc())
+                    GetLogger().get_logger().error(traceback.format_exc())
                     response['status'] = 1
                     response['errmsg'] = '更改permission name 出错'
                     return JsonResponse(response)

@@ -143,6 +143,7 @@ LOGIN_URL = '/account/login'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    #日志格式
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
@@ -154,22 +155,26 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(pathname)s %(filename)s %(module)s %(funcName)s %(lineno)d: %(message)s'
         },
     },
+    #过滤器
     'filters': {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
         },
     },
+    #处理器
     'handlers': {
         'null': {
             'level': 'DEBUG',
             'class': 'logging.NullHandler',
         },
+        #输出到控制台
         'console': {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
+        #发送邮件通知管理员
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -179,10 +184,14 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': '/tmp/django.log',
+            #文件大小
+            'maxBytes': 1024*1024*5,
+            'backupCount': 5,
             'formatter': 'standard',
         }
 
     },
+    #logging管理器
     'loggers': {
         'django': {
             'handlers': ['file_handler', 'console'],
@@ -200,5 +209,18 @@ LOGGING = {
 ADMINS = {
     ('TEST', 'ming_v5@sina.com'),
 }
-
 SERVER_EMAIL = 'ming_v5@sina.com'
+SEND_BROKEN_LINK_EMAILS = True
+#Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sina.com'
+EMAIL_PORT = 25
+#邮箱账号
+EMAIL_HOST_USER = ''
+#邮箱密码或者授权码
+EMAIL_HOST_PASSWORD = ''
+#邮箱前缀
+EMAIL_SUBJECT_PREFIX = 'website'
+#开启安全链接
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER

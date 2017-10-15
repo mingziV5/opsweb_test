@@ -1,11 +1,21 @@
 {% extends 'public/layout.html' %}
-
+{% load view_extras %}
 {% block breadcrunb %}
 <li><a href="#">资源管理</a><span class="divider"></span></li>
 <li class="active">服务器列表</li>
 {% endblock %}
 
 {% block body %}
+    <caption>
+        <form class="form-inline">
+          <div class="form-group">
+            <div class="input-group">
+              <input type="text" name="hostname" value="{{ hostname }}" class="form-control" >
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+    </caption>
     <table class='table table-striped'>
         <tr>
             <th>序号</th>
@@ -23,8 +33,10 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ server_obj.hostname }}</td>
             <td>{{ server_obj.inner_ip }}</td>
-            <td>{{ server_obj.service_id|default_if_none:"" }}</td>
-            <td>{{ server_obj.server_purpose|default_if_none:"" }}</td>
+            <!-- <td>{{ server_obj.service_id|default_if_none:"" }}</td> -->
+            <!-- <td>{{ server_obj.server_purpose|default_if_none:"" }}</td> -->
+            <td>{{ server_obj.service_id|get_product:product }}</td>
+            <td>{{ server_obj.server_purpose|get_product:product }}</td>
             <td>{{ server_obj.os }}</td>
             <td>{{ server_obj.check_update_time }}</td>
             <td>{{ server_obj.status.name }}</td>
@@ -54,9 +66,9 @@
             {% endif %}
             {% for p in page_range_obj %}
                 {% if p == page_obj.number %}
-                <li class='active'><a href="{% url 'server_list' %}?page={{ p }}">{{ p }}</a></li>
+                <li class='active'><a href="{% url 'server_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% else %}
-                <li><a href="{% url 'server_list' %}?page={{ p }}">{{ p }}</a></li>
+                <li><a href="{% url 'server_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% endif %}
             {% endfor %}
             {% if page_obj.has_next %}

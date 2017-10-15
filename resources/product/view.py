@@ -46,30 +46,33 @@ class Ztree(object):
     def get_product(self):
         return Product.objects.all()
 
-    def get(self, idc=False):
+    def get(self, idc=False, async=False):
         ret = []
         for product in self.data.filter(pid=0):
             node = self.process_node(product)
-            node["children"] = self.get_children(product.id)
+            node["children"] = self.get_children(product.id, async)
             node["isParent"] = 'true'
             ret.append(node)
         if idc:
             return self.get_idc_node(ret)
         return ret
 
-    def get_children(self, id):
+    def get_children(self, id, async=False):
         ret = []
         for product in self.data.filter(pid=id):
-            node = self.process_node(product)
+            node = self.process_node(product, async)
             ret.append(node)
         return ret
 
-    def process_node(self, product_obj):
-        return {
+    def process_node(self, product_obj, async=False):
+        ret =  {
             "name": product_obj.service_name,
             "id": product_obj.id,
             "pid": product_obj.pid
         }
+        if async:
+            ret['isParent'] = 'true'
+        return ret
 
     def get_idc_node(self, nodes):
         ret = []

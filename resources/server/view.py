@@ -43,6 +43,17 @@ class ServerListView(ListView):
     before_range_num = 4
     after_range_num = 5
 
+    def get_queryset(self):
+        queryset = super(ServerListView, self).get_queryset()
+        hostname = self.request.GET.get('hostname', None)
+        if hostname:
+            queryset = queryset.filter(hostname__icontains=hostname)
+
+        ip = self.request.GET.get('innerip', None)
+        if ip:
+            queryset = queryset.filter(inner_ip__icontains=ip)
+        return queryset
+
     def get_page_range(self, page_obj):
         current_index = page_obj.number
         start = current_index - self.before_range_num
@@ -56,7 +67,25 @@ class ServerListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(ServerListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
+        context['product'] = self.get_product()
+
+        search_data = self.request.GET.copy()
+        try:
+            search_data.pop("page")
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            pass
+        context.update(search_data.dict())
+        search_url_str = search_data.urlencode()
+        if search_url_str:
+            context['search_data'] = "&" + search_url_str
         return context
+
+    def get_product(self):
+        ret = {}
+        for obj in Product.objects.all():
+            ret[obj.id] = obj.service_name
+        return ret
 
 class ModifyServerStatusView(LoginRequiredMixin, View):
     def get(self, request):

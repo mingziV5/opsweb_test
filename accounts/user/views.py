@@ -239,7 +239,8 @@ class SearchUserView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
         try:
             search_data.pop("page")
         except:
-            GetLogger.get_logger().error(traceback.format_exc())
+            GetLogger().get_logger().error(traceback.format_exc())
+            pass
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
         return context

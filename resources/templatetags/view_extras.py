@@ -26,3 +26,11 @@ def businesshours(value):
         return 9<= value.hour < 17
     except AttributeError:
         return ''
+
+@register.filter
+def get_product(product_id, product_dict):
+    #product_dict: {1: '业务线1', 2: '业务线2'}
+    try:
+        return product_dict[product_id]
+    except:
+        return ""

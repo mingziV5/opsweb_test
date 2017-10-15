@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'resources',
     'permissions',
+    'monitor',
 ]
 
 MIDDLEWARE = [
@@ -185,7 +186,7 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': '/tmp/django.log',
             #文件大小
-            'maxBytes': 1024*1024*5,
+            #'maxBytes': 1024*1024*5,
             'backupCount': 5,
             'formatter': 'standard',
         }
@@ -224,3 +225,8 @@ EMAIL_SUBJECT_PREFIX = 'website'
 #开启安全链接
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
+
+#zabbix
+ZABBIX_API= 'http://123.59.185.96/zabbix/'
+ZABBIX_USER = 'admin'
+ZABBIX_USERPASS = 'zabbix'

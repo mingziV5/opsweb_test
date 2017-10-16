@@ -227,6 +227,9 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
 
 #zabbix
-ZABBIX_API= 'http://123.59.185.96/zabbix/'
-ZABBIX_USER = 'admin'
-ZABBIX_USERPASS = 'zabbix'
+#ZABBIX_API= 'http://123.59.185.96/zabbix/'
+#ZABBIX_USER = 'admin'
+#ZABBIX_USERPASS = 'zabbix'
+ZABBIX_API = 'http://10.0.0.54'
+ZABBIX_USER = 'shenzm'
+ZABBIX_USERPASS = 'shenzm'

@@ -75,11 +75,20 @@
                     <div class="form-group clearfix">
                         <label class="label-height pull-left">zabbix group</label>
                         <div class="col-xs-7 col-md-7" id="selectbox">
-
-                            <select  class="chosen-select chosen-transparent form-control" id="input07" parsley-trigger="change" parsley-required="true" parsley-error-container="#selectbox"  name="group">
+                            <select data-placeholder="" multiple="选择主机组" tabindex="3" name="group" class="chosen-select form-control chosen-transparent">
                                 <option value="">请选择</option>
                                 {% for group in groups %}
                                 <option value="{{ group.groupid }}">{{ group.name }}</option>
+                                {% endfor  %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="label-height pull-left">zabbix templates</label>
+                        <div class="col-xs-7 col-md-7" id="selectbox">
+                            <select data-placeholder="" multiple="选择模板" tabindex="3" name="template" class="chosen-select form-control chosen-transparent">
+                                {% for template in templates %}
+                                <option value="{{ template.templateid }}">{{ template.name }}</option>
                                 {% endfor  %}
                             </select>
                         </div>

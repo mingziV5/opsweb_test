@@ -21,16 +21,31 @@ class HostRsyncView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(HostRsyncView, self).get_context_data(**kwargs)
         context['groups'] = Zabbix().get_groups()
+        context['templates'] = Zabbix().get_templates()
         context['ztree'] = Ztree().get(async=True)
         return context
 
+    def _change_to_dict(self, my_list, my_key):
+        new_list = []
+        for i in my_list:
+            my_dict = {}
+            my_dict.setdefault(my_key, i)
+            new_list.append(my_dict)
+        return new_list
+
     def post(self, request):
         ret = {'status': 0}
-        group = request.POST.get("group", "")
+        groups = request.POST.getlist("group", [])
         server = request.POST.getlist("server", [])
-        ret_data = create_host(server, group)
+        templates = request.POST.getlist('template', [])
+        templates = Zabbix().filter_templates(templates)
+        groups = self._change_to_dict(groups, 'groupid')
+        templates = self._change_to_dict(templates, 'templateid')
+
+        ret_data = create_host(server, groups, templates)
         ret["data"] = ret_data
         return JsonResponse(ret)
+
 
 class AsyncView(View):
 

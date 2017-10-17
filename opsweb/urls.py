@@ -24,5 +24,5 @@ urlpatterns = [
     url(r'^account/', include('accounts.urls')),
     url(r'^resource/', include('resources.urls')),
     url(r'^permission/', include('permissions.urls')),
-    url(r'monitor/', include('monitor.urls')),
+    url(r'^monitor/', include('monitor.urls')),
 ]

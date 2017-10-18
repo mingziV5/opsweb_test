@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from resources.product.models import Product
 from resources.idc.models import Idc
 from resources import product
-from resources.product.form import AddProductForm
+from resources.product.form import AddProductForm, ModifyProductForm
 from django.shortcuts import redirect
 import json
 import traceback
@@ -21,6 +21,7 @@ class AddProductView(TemplateView):
 
     def post(self, request):
         product_form = AddProductForm(request.POST)
+        print(request.body)
         if product_form.is_valid():
             product = Product(**product_form.cleaned_data)
             try:
@@ -118,3 +119,30 @@ class ProductManageView(TemplateView):
         context = super(ProductManageView, self).get_context_data(**kwargs)
         context['ztree'] = Ztree().get()
         return context
+
+    def post(self, request):
+        response = {}
+        product_form = ModifyProductForm(request.POST)
+        print(request.body)
+        if product_form.is_valid():
+            try:
+                pid = product_form.cleaned_data.get('id')
+                print(product_form.cleaned_data)
+                product_obj = Product.objects.get(pk=pid)
+                product_obj.service_name = product_form.cleaned_data.get('service_name')
+                product_obj.module_letter = product_form.cleaned_data.get('module_letter')
+                product_obj.dev_interface = product_form.cleaned_data.get('dev_interface')
+                product_obj.op_interface = product_form.cleaned_data.get('op_interface')
+                product_obj.save()
+                response['status'] = 0
+            except Exception as e:
+                GetLogger().get_logger().error('修改业务线出错： {}'.format(e))
+                response['status'] = 1
+                response['errmsg'] = '修改业务线出错'
+        else:
+            GetLogger().get_logger().error('数据验证错误')
+            response['status'] = 1
+            response['errmsg'] = '数据验证错误'
+        return JsonResponse(response)
+
+

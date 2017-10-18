@@ -218,7 +218,8 @@
                     }else{
                         op_option = '<option value="'+obj.email+'">';
                     }
-                    op_option += obj.email+' | '+obj.username+'</option>';
+                    //op_option += obj.email+' | '+obj.username+'</option>';
+                    op_option += obj.username + '</option>';
                     input_op_interface.append(op_option);
 
                     if ($.inArray(obj.email, selected_dev_email) >= 0){
@@ -226,11 +227,11 @@
                     }else{
                         dev_option = '<option value="'+obj.email+'">';
                     }
-                    dev_option += obj.email+' | '+obj.username+'</option>';
+                    //dev_option += obj.email+' | '+obj.username+'</option>';
+                    dev_option += obj.username + '</option>';
                     input_dev_interface.append(dev_option)
 
                 });
-
                 input_op_interface.chosen({disable_search_threshold: 10,
                                     no_results_text: "没有找到对应的记录"});
                 input_dev_interface.chosen({disable_search_threshold: 10,
@@ -249,8 +250,8 @@
                     "id": data.id,
                     "service_name": input_service_name.val(),
                     "module_letter": input_module_letter.val(),
-                    "dev_interface": input_dev_interface.val(),
-                    "op_interface": input_op_interface.val()
+                    "dev_interface": input_dev_interface.val().toString(),
+                    "op_interface": input_op_interface.val().toString(),
                 };
 
                 $.ajax({

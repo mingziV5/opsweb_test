@@ -58,7 +58,7 @@
                     </div>
                     <div class="ul-list" style="display:none;">
                         <div class="text-center">
-                            <input type="text" placeholder="查询" name="" value="" class=" search-input">
+                            <input type="text" placeholder="查询" name="hostname" class="search-input">
                         </div>
                         <ul class="list list-unstyled host-list">
                             {% for server in servers %}
@@ -73,7 +73,7 @@
             <div class="outer-box2">
                 <form class="form-horizontal" role="form" parsley-validate id="rsync_host_form" method="POST">
                     <div class="form-group clearfix">
-                        <label class="label-height pull-left">zabbix group</label>
+                        <label class="label-height pull-left col-xs-2 col-md-2">zabbix group</label>
                         <div class="col-xs-7 col-md-7" id="selectbox">
                             <select data-placeholder="" multiple="选择主机组" tabindex="3" name="group" class="chosen-select form-control chosen-transparent">
                                 <option value="">请选择</option>
@@ -84,7 +84,7 @@
                         </div>
                     </div>
                     <div class="form-group clearfix">
-                        <label class="label-height pull-left">zabbix templates</label>
+                        <label class="label-height pull-left col-xs-2 col-md-2">zabbix templates</label>
                         <div class="col-xs-7 col-md-7" id="selectbox">
                             <select data-placeholder="" multiple="选择模板" tabindex="3" name="template" class="chosen-select form-control chosen-transparent">
                                 {% for template in templates %}
@@ -106,35 +106,35 @@
             </div>
         </li>
     </ul>
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="myModalLabel">同步主机到zabbix</h4>
-            </div>
-            <div class="modal-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>主机名</th>
-                            <th>信息</th>
-                        </tr>
-                    </thead>
-                    <tbody class="tbody">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="myModalLabel">同步主机到zabbix</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>主机名</th>
+                                <th>信息</th>
+                            </tr>
+                        </thead>
+                        <tbody class="tbody">
 
-                    </tbody>
+                        </tbody>
 
-                </table>
-            </div>
-            <div class="modal-footer">
-                <p class="text-center">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </p>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <p class="text-center">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 {% endblock %}
 
@@ -230,6 +230,7 @@ $(function(){
             var filter = $(this).val();
             var obj = {'key':filter};
             var $list_info =  $('.list').empty();
+            console.log(filter)
             if (filter) {
                 $.ajax({
                     url:'',
@@ -237,6 +238,7 @@ $(function(){
                     contentType :'application/json',
                     data:obj,
                     success:function (res) {
+                        console.log(res)
                         $.each(res,function (index,obj) {
                             var str = '<li class="text-center"><span data="'+ obj.id +'">'+ obj.hostname + '</span></li>';
                             $list_info.append(str);

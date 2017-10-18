@@ -1,5 +1,5 @@
 from django.views.generic import View,TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from opsweb.utils import GetLogger
 from monitor.zabbix.client import cache_host, Zabbix, create_host
 from resources.product.view import Ztree
@@ -17,6 +17,7 @@ class ZabbixCacheHostView(View):
 
 class HostRsyncView(TemplateView):
     template_name = 'zabbix/host_rsync.html'
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace', 'search']
 
     def get_context_data(self, **kwargs):
         context = super(HostRsyncView, self).get_context_data(**kwargs)
@@ -45,6 +46,19 @@ class HostRsyncView(TemplateView):
         ret_data = create_host(server, groups, templates)
         ret["data"] = ret_data
         return JsonResponse(ret)
+
+    def search(self, request):
+        response = {}
+        data = QueryDict(request.body)
+        key_value = data.get('key', None)
+        if not key_value:
+            GetLogger().get_logger().error('搜索主机key_value为空')
+        try:
+            servers = Server.objects.filter(hostname__icontains=key_value).values('id', 'hostname')
+        except Exception as e:
+            GetLogger().get_logger().error('发生异常： {}'.format(e))
+        servers = list(servers)
+        return JsonResponse(servers, safe=False)
 
 
 class AsyncView(View):

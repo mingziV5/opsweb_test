@@ -4609,7 +4609,7 @@ th,td{
         position: inherit;
         margin: 0 0 0 200px;
         padding: 0 30px;
-        min-height: 800px;
+        min-height: 1200px;
         border-left: 1px solid #e7e7e7;
     }
 }

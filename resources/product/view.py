@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from resources.product.models import Product
 from resources.idc.models import Idc
-from resources import product
 from resources.product.form import AddProductForm, ModifyProductForm
 from django.shortcuts import redirect
 import json
@@ -125,7 +124,6 @@ class ProductManageView(TemplateView):
         if product_form.is_valid():
             try:
                 pid = product_form.cleaned_data.get('id')
-                print(product_form.cleaned_data)
                 product_obj = Product.objects.get(pk=pid)
                 product_obj.service_name = product_form.cleaned_data.get('service_name')
                 product_obj.module_letter = product_form.cleaned_data.get('module_letter')

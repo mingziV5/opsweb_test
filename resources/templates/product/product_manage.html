@@ -250,14 +250,15 @@
                     "id": data.id,
                     "service_name": input_service_name.val(),
                     "module_letter": input_module_letter.val(),
-                    "dev_interface": input_dev_interface.val().toString(),
-                    "op_interface": input_op_interface.val().toString(),
+                    "dev_interface": input_dev_interface.val(),
+                    "op_interface": input_op_interface.val(),
                 };
-
+                console.log(modify_data['dev_interface'])
                 $.ajax({
                     url: "",
                     type: "post",
                     data: modify_data,
+                    traditional: true,
                     success: function (res) {
                         if (res.status == 0){
                             swal({

@@ -21,7 +21,6 @@ class AddProductView(TemplateView):
 
     def post(self, request):
         product_form = AddProductForm(request.POST)
-        print(request.body)
         if product_form.is_valid():
             product = Product(**product_form.cleaned_data)
             try:
@@ -123,7 +122,6 @@ class ProductManageView(TemplateView):
     def post(self, request):
         response = {}
         product_form = ModifyProductForm(request.POST)
-        print(request.body)
         if product_form.is_valid():
             try:
                 pid = product_form.cleaned_data.get('id')

@@ -18,7 +18,9 @@ class Zabbix(object):
     def get_groups(self):
         return self.zb.hostgroup.get(output=['groupid', 'name'])
 
-    def get_templates(self):
+    def get_templates(self, hostids=None):
+        if hostids:
+            return self.zb.template.get(output=['templateid', 'name'], hostids=hostids)
         return self.zb.template.get(output=['templateid', 'name'])
 
     def get_parent_templates(self):
@@ -39,6 +41,24 @@ class Zabbix(object):
                             template_list.remove(p_template_dict['templateid'])
         return template_list
         #for templateid in template_list:
+
+    def unlink_template(self, hostid, templateid):
+        return self.zb.host.update(hostid=hostid, templates_clear=[{'templateid': templateid}])
+
+    def link_template(self, hostid, templates):
+        linked_templates_ids = [t['templateid'] for t in self.get_templates(hostid)]
+        linked_templates_ids.extend(templates)
+        return self._link_template(hostid, linked_templates_ids)
+
+    def _link_template(self, hostid, templateids):
+        templates = []
+        for tid in templateids:
+            templates.append({'templateid': tid})
+        try:
+            ret = self.zb.host.update(hostid=hostid, templates=templates)
+            return ret
+        except Exception as e:
+            return e.args
 
 
 
@@ -138,3 +158,44 @@ def _create_host(hostname, ip, group, template, port="10050"):
             raise Exception(ret["hostids"][0])
     except Exception as e:
         raise Exception(e.args[0])
+
+def unlink_template(serverid, templateid):
+    try:
+        server = Server.objects.get(pk=serverid)
+        hostid = server.zabbixhost.hostid
+    except Server.DoesNotExist:
+        raise Exception('服务器不存在')
+    except AttributeError:
+        raise Exception('请先同步缓存')
+    ret = Zabbix().unlink_template(hostid, templateid)
+    if 'hostids' in ret:
+        return True
+    raise Exception(ret[0])
+
+def link_template(serverids, templateids):
+    zb = Zabbix()
+    data = []
+    for serverid in serverids:
+        ret_data = {}
+        try:
+            server = Server.objects.get(pk=serverid)
+            ret_data['hostname'] = server.hostname
+            hostid = server.zabbixhost.hostid
+            ret = zb.link_template(hostid, templateids)
+        except Server.DoesNotExist:
+            ret_data['status'] = False
+            ret_data['errmsg'] = '服务器不存在'
+        except AttributeError:
+            ret_data['status'] = False
+            ret_data['errmsg'] = '服务器没有监控'
+        except Exception as e:
+            ret_data['status'] = False
+            ret_data['errmsg'] = e.args
+        else:
+            if 'hostids' in ret:
+                ret_data['status'] = True
+            else:
+                ret_data['status'] = False
+                ret_data['errmsg'] = ret[0]
+        data.append(ret_data)
+    return data

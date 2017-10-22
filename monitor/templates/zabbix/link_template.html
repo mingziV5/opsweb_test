@@ -1,0 +1,328 @@
+{% extends "public/layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="/static/zTree_v3-master/css/zTreeStyle/zTreeStyle.css" type="text/css">
+<style>
+    .label-height{height:42px;line-height: 42px;margin-bottom: 0px;}
+    .btn + .btn{margin-left:20px;}
+    .choose-one{padding-top:10px;padding-bottom:10px;}
+    .choose-one a{font-size: 10px;}
+    .margin-lr15{margin-left:-15px;margin-right:-15px;}
+    .table > tbody > tr > td{vertical-align: middle;}
+    input[type=checkbox]{margin:2px 0px 0px;}
+    .table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td{border-top:0px;}
+    td{text-align: left;}
+    td p{margin:0px;}
+    .padding-right10{padding-right:10px;}
+    .checkbox{margin-top:0px;margin-bottom:0px;}
+    .margin-top4{margin-top:4px;}
+    .glyphicon{top:3px;}
+    input[type=checkbox]{margin:4px 0px 0px;}
+    .bg-gif{display:none;font-size: 70px;color:#1ab394;}
+    .bg-gif span{animation:rotate 5s infinite linear; }
+    @-moz-keyframes rotate{
+        0%{
+            -moz-transform:rotate(0deg);
+        }
+        100%{
+            -moz-transform:rotate(360deg);
+        }
+    }
+    @-webkit-keyframes rotate{
+        0%{
+            -webkit-transform:rotate(0deg);
+        }
+        100%{
+            -webkit-transform:rotate(360deg);
+        }
+    }
+    @keyframes rotate{
+        0%{
+            transform:rotate(0deg);
+        }
+        100%{
+            transform:rotate(360deg);
+        }
+    }
+    .cover{position:fixed;width:100%;height:100%;top:0;left:0;right:0;bottom:0;display:none;z-index:2000;}
+    .cover-bg{position:fixed;background:rgba(0,0,0,0.8);z-index:2001;width:100%;height:100%;top:0;left:0;right:0;bottom:0;}
+    .cover p{position:absolute;color:#ffffff;font-size: 30px;text-align: center;z-index: 2100;width:200px;height:50px;top:50%;margin-top:-25px;left:50%;margin-left:-100px;}
+
+    #link_template_ret>tr>td:nth-of-type(1){white-space:nowrap; }
+    #link_template_ret>tr>td:nth-of-type(2){text-align: left;}
+</style>
+
+{% endblock %}
+
+
+
+{% block breadcrumb %}
+<li><a href="#">监控配置</a><span class="divider"></span></li>
+<li class="active">模板绑定</li>
+{% endblock %}
+
+{% block body %}
+
+
+<div class="row">
+        <div class="col-xs-2 col-md-2 col-lg-2">
+            <ul id="treeDemo" class="ztree"></ul>
+        </div>
+        <div class="col-xs-10 col-md-10 col-lg-10">
+            <div class="row">
+                <div class="pull-left"><label class="label-height">模板搜索</label></div>
+                <div class="col-xs-6 col-md-6 col-lg-6">
+                    <select name="" id="select-templates" class="chosen-select chosen-transparent form-control" parsley-trigger="change" parsley-required="true" parsley-error-container="#selectbox" multiple>
+                        {% for template in templates %}
+                        <option value="{{ template.templateid }}">{{ template.name }}</option>
+                        {% endfor  %}
+
+                    </select>
+                </div>
+                <div class="col-xs-4 col-md-4 col-lg-4 margin-top4">
+                    <button class="btn btn-primary" id="template-link">模板关联</button>
+                    <button class="btn btn-info sync-cache">同步cache</button>
+                </div>
+            </div>
+            <div class="choose-one">
+                <a href="javascript:;" class="btn btn-default choose-all">全选</a>
+                <a href="javascript:;" class="btn btn-default unchoose">反选</a>
+                <a href="javascript:;" class="btn btn-default unchoose-all">全不选</a>
+            </div>
+
+            <div class="bg-gif col-md-4 text-center"><span class="glyphicon glyphicon-refresh"></span></div>
+            <table class="table margin-lr15">
+                <tbody class="line-list">
+
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!--遮盖层-->
+<div class="cover">
+    <div class="cover-bg"></div>
+    <p>同步中...</p>
+</div>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">同步template</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>主机名</th>
+                            <th>信息</th>
+                        </tr>
+                    </thead>
+                    <tbody id="link_template_ret">
+
+                    </tbody>
+
+                </table>
+            </div>
+            <div class="modal-footer">
+                <p class="text-center">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="/static/zTree_v3-master/js/jquery.ztree.core.js"></script>
+
+
+
+<script>
+
+var zTreeObj;
+
+var setting = {
+    callback:{
+        onClick: zTreeOnClick
+    },
+    view: {
+        fontCss : {fontSize:"16px"}
+    },
+};
+var zNodes = {{ ztree|safe }};
+var $parent = $('.line-list');
+
+
+
+
+function zTreeOnClick(event, treeId, treeNode) {
+    if(treeNode.pid === 0){
+        return false;
+    }
+
+    $parent.empty();
+    $('.bg-gif').show();
+    $.ajax({
+        data:{id:treeNode.id},
+        type:'get',
+        url:"{% url 'zabbix_host_templates' %}",
+        success:function (res) {
+            $('.bg-gif').hide();
+            $.each(res,function (index,obj) {
+                var str = '';
+                str += '<tr>';
+                str += '<td width="200"><div class="checkbox"><label><input type="checkbox" name="hostname" value="'+obj.id+'"/>'+ obj.hostname +'</label></div></td>';
+                str +='<td class="clearfix">';
+                if(!obj.monitor){
+                    str += "not monitor"
+                }else{
+                    if(obj.templates_flag){
+                        $.each(obj.templates,function (n,item) {
+
+                            str += '<p class="pull-left padding-right10">'+ item.name+'<span class="glyphicon glyphicon-remove" data=\'{"hostid":"'+obj.id+'", "templateid": "'+item.templateid+'"}\'></span></p>'
+                        });
+                    }else{
+                        str += "no tempate"
+                    }
+                }
+
+                str += '</td>';
+                str += '</tr>';
+
+                $parent.append(str);
+            });
+
+            $('.glyphicon-remove').bind('click',function () {
+                click_obj = $(this);
+                data = JSON.parse(click_obj.attr('data'));
+                $.ajax({
+                    url: "",
+                    type: "DELETE",
+                    data: data,
+                    success: function (res) {
+                        if( res.status == 0){
+                            swal({
+                                title: "操作成功",
+                                text:"",
+                                type: "success"
+                            },function(){
+                                click_obj.parent("p").remove()
+                            })
+
+                        }else(
+                            swal("操作失败", res.errmsg, "error")
+                        )
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                });
+            });
+
+        }
+
+    });
+}
+
+
+$(function(){
+    zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, zNodes);
+    $(".chosen-select").chosen({disable_search_threshold: 10});
+
+    $('.choose-all').click(function () {
+        $(".line-list td input[type=checkbox]").prop('checked',true);
+    });
+
+    $('.unchoose-all').click(function () {
+        $(".line-list td input[type=checkbox]").removeAttr("checked")
+    });
+
+    $('.unchoose').click(function () {
+        $(".line-list td input[type=checkbox]").each(function (index, item) {
+            var check_obj = $(item);
+            if(check_obj.prop("checked")){
+                check_obj.removeAttr("checked");
+            }
+            else{
+                check_obj.prop("checked",'true');
+            }
+        })
+    });
+
+    $('.sync-cache').click(function () {
+        $('.cover').show();
+        $.ajax({
+            type:'GET',
+            url:"{% url 'zabbix_get' %}",
+            success:function (res) {
+                $('.cover').hide();
+            }
+        })
+    });
+
+    var select_templatges = $("#select-templates")
+    $("#template-link").click(function(){
+
+        templateids = select_templatges.val();
+
+
+        hostids = new Array();
+        $.each($(".line-list input:checkbox"), function(n,obj){
+            if ($(obj).prop('checked')){
+                hostids.push(obj.value)
+            }
+        });
+        if (templateids == null){
+            removeMasking();
+            swal("操作失败", "请选择正确的模板", "error");
+            return false;
+        }
+
+        if (hostids.length == 0){
+            removeMasking();
+            swal("操作失败", "没有沟选主机", "error");
+            return false;
+        }
+        $.ajax({
+            type:'POST',
+            url:'#',
+            data: {"hostids": hostids, "templateids": templateids},
+            success:function (res) {
+                var tbody = $('#link_template_ret').empty();
+                $.each(res.data,function (index,obj) {
+                    var str = '';
+                    str += '<tr>';
+                    str +='<td>'+obj.hostname+'</td>';
+                    if(obj.status){
+                        str +='<td>操作成功</td>';
+                    }else{
+                        str +='<td>'+obj.errmsg+'</td>';
+                    }
+                    str += '</tr>';
+                    tbody.append(str);
+                });
+                $parent.empty();
+                $('#myModal').modal('show');
+            },
+            beforeSend: function (xhr, settings) {
+                var csrftoken = getCookie('csrftoken');
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        })
+    })
+
+});
+
+</script>
+{% endblock %}

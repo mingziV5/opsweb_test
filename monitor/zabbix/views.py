@@ -1,7 +1,7 @@
 from django.views.generic import View,TemplateView
 from django.http import JsonResponse, QueryDict
 from opsweb.utils import GetLogger
-from monitor.zabbix.client import cache_host, Zabbix, create_host
+from monitor.zabbix.client import cache_host, Zabbix, create_host, unlink_template, link_template
 from resources.product.view import Ztree
 from resources.server.models import Server
 
@@ -71,4 +71,74 @@ class AsyncView(View):
             z_data['id'] = s.id
             z_data['name'] = s.hostname
             ret.append(z_data)
+        return JsonResponse(ret, safe=False)
+
+class LinkTemplateView(TemplateView):
+    template_name = 'zabbix/link_template.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LinkTemplateView, self).get_context_data(**kwargs)
+        context['ztree'] = Ztree().get()
+        context['templates'] = Zabbix().get_templates()
+        return context
+
+    def delete(self, request):
+        ret = {'status': 0}
+        params = QueryDict(request.body)
+        hostid = params.get('hostid', None)
+        templateid = params.get('templateid', None)
+
+        if not hostid:
+            ret['status'] = 1
+            ret['errmsg'] = '参数错误， 没有指定主机'
+            return JsonResponse(ret)
+        if not templateid:
+            ret['status'] = 1
+            ret['errmsg'] = '参数错误，没有指定模板'
+            return JsonResponse(ret)
+        try:
+            unlink_template(hostid, templateid)
+        except Exception as e:
+            ret['status'] = 1
+            ret['errmsg'] = e.args
+        return JsonResponse(ret)
+
+    def post(self, request):
+        ret = {'status': 0}
+        hostids = request.POST.getlist('hostids[]', [])
+        templateids = request.POST.getlist('templateids[]', [])
+        if not hostids:
+            ret['status'] = 1
+            ret['errmsg'] = '参数错误，没有指定主机'
+            return JsonResponse(ret)
+        if not templateids:
+            ret['status'] = 1
+            ret['errmsg'] = '参数错误， 没有指定模板'
+            return JsonResponse(ret)
+        ret['data'] = link_template(hostids, templateids)
+        return JsonResponse(ret)
+
+class GetHostTemplatesView(View):
+    def get(self, request):
+        ret = []
+        servers = Server.objects.filter(server_purpose=request.GET.get('id', None))
+        GetLogger().get_logger().info('服务器列表长度: {}'.format(len(servers)))
+        for server in servers:
+            data = {}
+            data['hostname'] = server.hostname
+            data['id'] = server.id
+
+            if hasattr(server, 'zabbixhost'):
+                GetLogger().get_logger().info('{}有监控'.format(server.hostname))
+                data['monitor'] = True
+                templates = Zabbix().get_templates(hostids=server.zabbixhost.hostid)
+                if templates:
+                    data['templates_flag'] = True
+                    data['templates'] = templates
+                else:
+                    data['templates_flag'] = False
+            else:
+                GetLogger().get_logger().info('{}没有监控'.format(server.hostname))
+                data['monitor'] = False
+            ret.append(data)
         return JsonResponse(ret, safe=False)

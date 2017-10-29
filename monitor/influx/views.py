@@ -41,8 +41,11 @@ class influxdbCli():
                 group by time(10s) order by time desc;""".format(hostname)
         result = self.client.query(sql, epoch='s')
         #判断hostnames长度
-        for index, hostname in enumerate(hostnames):
-            self.process_data(hostname, result.get_points())
+        if len(hostnames) > 1:
+            for index, hostname in enumerate(hostnames):
+                self.process_data(hostname, result[index].get_points())
+        else:
+            self.process_data(hostnames[0], result.get_points())
 
     def process_data(self, hostname, data_points):
         serie = {}

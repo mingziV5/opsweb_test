@@ -1,0 +1,72 @@
+{% extends "public/layout.html" %}
+
+
+
+
+
+{% block breadcrumb %}
+<li><a href="#">监控展示</a><span class="divider"></span></li>
+<li class="active">业务性能</li>
+{% endblock %}
+
+{% block body %}
+
+    <div id="main" style="width: 900px;height:350px;"></div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="/static/js/echarts.min.js"></script>
+    <script type="text/javascript">
+	// 基于准备好的dom，初始化echarts实例
+    var series = {{ series|safe }};
+    var categories = {{ categories|safe }};
+	var myChart = echarts.init(document.getElementById('main'));
+
+
+	// 指定图表的配置项和数据
+	var option = {
+        title: {
+            text: '流量图',
+            left: "center",
+            subtext: "子标题"
+        },
+        tooltip : {
+            trigger: 'axis',
+            axisPointer: {
+                //type: 'cross',
+                label: {
+                    backgroundColor: '#6a7985'
+                }
+            }
+        },
+
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis : {
+            type : 'category',
+            boundaryGap : false,
+        },
+        yAxis : [
+            {
+                type : 'value'
+            }
+        ]
+
+    };
+
+	// 使用刚指定的配置项和数据显示图表。
+	myChart.setOption(option);
+	var new_option = {
+        xAxis: {
+            data: categories
+        },
+        series: series
+    };
+    myChart.setOption(new_option);
+</script>
+{% endblock %}

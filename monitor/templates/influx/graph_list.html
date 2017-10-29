@@ -1,0 +1,103 @@
+{% extends "public/layout.html" %}
+
+{% block body %}
+    <div class="tile-header">
+        <h1><strong></strong>  </h1>
+        <a class="btn btn-primary" href="{% url 'influx_graph_create' %}" role="button">create graph</a>
+    </div>
+
+
+
+    <!-- tile body -->
+    <div class="tile-body color transparent-black rounded-corners">
+
+        <div class="table-responsive">
+            <table  class="table table-datatable table-custom" id="basicDataTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th class="">标题</th>
+                        <th class="">子标题</th>
+                        <th class="">单位</th>
+                        <th class="">measurement</th>
+                        <th class="">自动主机名</th>
+                        <th class="">field_expression</th>
+                        <th class="">操作</th>
+                    </tr>
+
+                </thead>
+                <tbody>
+
+                    {% for graph in object_list %}
+                        <tr class="gradeA">
+                            <td> {{ forloop.counter }} </td>
+                            <td> {{ graph.title }} </td>
+                            <td> {{ graph.subtitle }} </td>
+                            <td> {{ graph.unit }} </td>
+                            <td> {{ graph.measurement }} </td>
+                            <td>
+                                {% if graph.auto_hostname %}
+                                    是
+                                {% else %}
+                                    否
+                                {% endif %}
+                            </td>
+                            <td> {{ graph.field_expression }} </td>
+                            <td>
+                                <button type="button" class="btn btn-success btn-sm">详情</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+
+
+            </table>
+
+
+
+        </div>
+
+
+    </div>
+    <!-- /tile body -->
+
+    <div class="tile-footer text-center">
+
+        <ul class="pagination pagination-sm nomargin pagination-custom">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?page={{ page_obj.previous_page_number }}{{ uri }}"><i class="fa fa-angle-double-left"></i></a>
+                </li>
+            {% else %}
+                <li class="disabled">
+                    <a href="#"><i class="fa fa-angle-double-left"></i></a>
+                </li>
+            {% endif %}
+
+            {% for page in paginator.page_range %}
+                <li {% if page_obj.number == page %}class="active"{% endif %}><a href="?page={{ page }}{{ uri }}" >{{ page }}</a></li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?page={{ page_obj.next_page_number }}{{ uri }}"><i class="fa fa-angle-double-right"></i></a>
+                </li>
+            {% else %}
+                <li class="disabled">
+                <a href="#"><i class="fa fa-angle-double-right"></i></a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script>
+
+    $(function(){
+        $(".chosen-select").chosen({disable_search_threshold: 10});
+    })
+</script>
+
+{% endblock %}

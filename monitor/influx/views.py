@@ -10,7 +10,7 @@ import time
 
 class influxdbCli():
     def __init__(self):
-        self.client = InfluxDBClient("192.168.1.201", database="collectd")
+        self.client = InfluxDBClient("192.168.0.201", database="collectd")
         #x轴数据
         self.categories = []
         #图形数据点
@@ -29,13 +29,12 @@ class influxdbCli():
         return ret
 
     def query(self):
-        hostnames = ["ubuntu-xenial"]
+        hostnames = ["ubuntu-xenial", "localhost"]
         sql = ""
         for hostname in hostnames:
             sql += """select mean(value) as value \
                 from interface_tx \
                 where time > now() - 10m \
-                and instance = 'enp0s8' \
                 and type = 'if_octets' \
                 and host = '{}' \
                 group by time(10s) order by time desc;""".format(hostname)

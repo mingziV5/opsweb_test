@@ -60,7 +60,7 @@ class CreateGrapView(TemplateView):
             return redirect('error', next=next_url, msg=form.errors.as_json())
 
 class ManagerGraphView(ListView):
-    template_name = 'influx/graph_manage.html'
+    template_name = 'influx/graph_manager.html'
     model = Graph
 
     def get_context_data(self, **kwargs):

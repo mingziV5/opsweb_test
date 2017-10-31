@@ -96,6 +96,7 @@ class IdcListView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
     after_range_num = 5
     ordering = 'id'
     permission_required = 'resources.view_idc'
+
     def get_queryset(self):
         queryset = super(IdcListView, self).get_queryset()
         queryset = queryset.values('id','name','full_name','contact','phone')

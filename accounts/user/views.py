@@ -246,6 +246,7 @@ class SearchUserView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
         return context
 
 class GetUserListView(View):
+
     def get(self, request):
         user = User.objects.values("id", "email", "username")
         return JsonResponse(list(user), safe=False)

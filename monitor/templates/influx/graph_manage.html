@@ -1,0 +1,174 @@
+{% extends "public/layout.html" %}
+
+
+{% block css %}
+    <style>
+    .chosen-container-single-nosearch{width:100% !important;}
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li><a href="#">监控管理</a><span class="divider"></span></li>
+<li class="active">业务性能图</li>
+{% endblock %}
+
+{% block body %}
+    <form class="form-inline" id="product_select_form">
+        <div class="form-group col-xs-4">
+            <select class="chosen-select chosen-transparent form-control"  name="product" id="select_product" >
+                <option value="0">请选择</option>
+                {% for product in products %}
+                    <option value="{{ product.id }}" {% if product.id  ==  productid  %}selected{% endif %} >{{ product.pid }}--{{ product.service_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <btuuon class="btn btn-primary" id="add_graph_btn">增加graph</btuuon>
+    </form>
+<table class="table table-striped">
+
+    <thead>
+        <tr>
+           <th>#</th>
+           <th>图形标题</th>
+           <th>子标题</th>
+           <th>单位</th>
+           <th>measurement</th>
+           <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for obj in object_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ obj.title }}</td>
+            <td>{{ obj.subtitle }}</td>
+            <td>{{ obj.unit }}</td>
+            <td>{{ obj.measurement }}</td>
+            <td>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-danger remove_graph" data="{{ obj.id }}" >删除</button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<div class="modal fade" id="add_graph_modal" aria-hidden="true">
+	<div class="modal-dialog">
+	    <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h4 id="user_to_group_modal_title"></h4>
+            </div>
+            <div class="modal-body clearfix">
+                <div class="col-xs-8" id="select_service_id">
+                    <select class="chosen-select chosen-transparent form-control" id="graph_select">
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="add_graph_submit_btn">添加</button>
+            </div>
+            <div class="modal-footer">
+
+                <input class="btn btn-default" data-dismiss="modal" aria-hidden="true" type="button" value="取消">
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        $(function(){
+            $(".chosen-select").chosen({disable_search_threshold: 8});
+
+            var add_graph_btn = $("#add_graph_btn");
+            var add_graph_modal = $("#add_graph_modal");
+            var graph_select = $("#graph_select");
+
+            add_graph_btn.click(function(){
+                add_graph_modal.modal('show');
+                $.get("", {"id": "{{ productid }}", "outside": "true"}, function(res){
+                    html = "<option value=0 >请选择graph</option>";
+                    $.each(res, function(i, obj){
+                        html += '<option value="'+ obj.id +'"> '+obj.title+'</option>';
+                    });
+                    graph_select.html(html);
+                    $("#graph_select_chosen").css('width','100%');
+                    graph_select.trigger("chosen:updated");
+                    add_graph_modal.modal('show');
+                });
+
+            });
+            $("#add_graph_submit_btn").click(function(){
+                add_graph_modal.modal("hide");
+                graph_id = graph_select.val();
+                $.ajax({
+                    url: "",
+                    type: "post",
+                    data: {"graph_id": graph_id},
+                    success: function (res) {
+                        if (res.status != 0){
+                            swal("添加失败", res.errmsg, "error")
+                        }else{
+                            swal({
+                                "title": "添加成功!",
+                                "text": "",
+                                "type": "success"
+                                },function(){
+                                    setTimeout(function(){
+                                        window.location.reload()
+                                    }, 50)
+                                })
+                        }
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                });
+            });
+
+            $("#select_product").change(function(){
+                $("#product_select_form").submit()
+            });
+
+            $(".remove_graph").click(function(){
+                graph_id = $(this).attr("data");
+                $.ajax({
+                    url: "",
+                    type: "delete",
+                    data: {"graph_id": graph_id},
+                    success: function (res) {
+                        if (res.status != 0){
+                            swal("删除失败", res.errmsg, "error")
+                        }else{
+                            swal({
+                                "title": "删除成功!",
+                                "text": "",
+                                "type": "success"
+                                },function(){
+                                    setTimeout(function(){
+                                        window.location.reload()
+                                    }, 50)
+                                })
+                        }
+                    },
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = getCookie('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                });
+            })
+
+        })
+    </script>
+{% endblock %}

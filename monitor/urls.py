@@ -18,6 +18,7 @@ urlpatterns = [
             url(r'^test/$', influx.views.ProductGraphView.as_view(), name='influx_graph'),
             url(r'^create/$', influx.views.CreateGrapView.as_view(), name='influx_graph_create'),
             url(r'^list/$', influx.views.GraphListView.as_view(), name='influx_graph_list'),
+            url(r'^manager/$', influx.views.ManagerGraphView.as_view(), name='influx_grap_manager')
         ])),
     ]))
 ]

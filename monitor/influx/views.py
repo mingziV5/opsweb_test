@@ -2,62 +2,13 @@ from django.http import JsonResponse
 from django.views.generic import View, TemplateView, ListView
 from django.shortcuts import reverse, redirect
 from django.utils.http import urlquote_plus
-from influxdb import InfluxDBClient
 from monitor.influx.models import Graph
 from monitor.influx.forms import CreateGraphForm
+from monitor.influx.influxdbCli import influxdbCli
+from resources.product.models import Product
+from opsweb.utils import GetLogger
 import json
-import time
-
-class influxdbCli():
-    def __init__(self):
-        self.client = InfluxDBClient("192.168.0.201", database="collectd")
-        #x轴数据
-        self.categories = []
-        #图形数据点
-        self.series = []
-        self.measurements = self.get_measurements()
-
-    def get_measurements(self):
-        measurements = self.client.query("show measurements").get_points()
-        return [m['name'] for m in measurements]
-
-    def process_time(self, categories):
-        ret = []
-        format_str = "%Y-%m-%d %H:%M:%S"
-        for point in categories:
-            ret.append(time.strftime(format_str, time.localtime(point)))
-        return ret
-
-    def query(self):
-        hostnames = ["ubuntu-xenial", "localhost"]
-        sql = ""
-        for hostname in hostnames:
-            sql += """select mean(value) as value \
-                from interface_tx \
-                where time > now() - 10m \
-                and type = 'if_octets' \
-                and host = '{}' \
-                group by time(10s) order by time desc;""".format(hostname)
-        result = self.client.query(sql, epoch='s')
-        #判断hostnames长度
-        if len(hostnames) > 1:
-            for index, hostname in enumerate(hostnames):
-                self.process_data(hostname, result[index].get_points())
-        else:
-            self.process_data(hostnames[0], result.get_points())
-
-    def process_data(self, hostname, data_points):
-        serie = {}
-        serie['name'] = hostname
-        serie['type'] = 'line'
-        serie['data'] = []
-        categories = []
-        for point in data_points:
-            serie['data'].insert(0, point['value'])
-            categories.insert(0, point['time'])
-        self.series.append(serie)
-        if not self.categories:
-            self.categories = categories
+import traceback
 
 class InfluxApiView(View):
     def get(self, request):
@@ -108,6 +59,54 @@ class CreateGrapView(TemplateView):
         else:
             return redirect('error', next=next_url, msg=form.errors.as_json())
 
+class ManagerGraphView(ListView):
+    template_name = 'influx/graph_manage.html'
+    model = Graph
+
+    def get_context_data(self, **kwargs):
+        context = super(ManagerGraphView, self).get_context_data(**kwargs)
+        try:
+            #context['products'] = Product.objects.exclude(pid=0)
+            products = Product.objects.exclude(pid=0)
+            for p in products:
+                p_service_name = Product.objects.get(id=p.pid).service_name
+                p.pid = p_service_name
+            context['products'] = products
+        except Exception as e:
+            GetLogger().get_logger().error(traceback.format_exc())
+        return context
+
 class GraphListView(ListView):
     template_name = 'influx/graph_list.html'
     model = Graph
+    paginate_by = 10
+    before_range_num = 4
+    after_range_num = 5
+
+    def get_queryset(self):
+        queryset = super(GraphListView, self).get_queryset()
+        queryset = Graph.objects.all()
+        return queryset
+
+    def get_page_range(self, page_obj):
+        current_index = page_obj.number
+        start = current_index - self.before_range_num
+        end = current_index + self.after_range_num
+        if start <= 0:
+            start = 1
+        if end > page_obj.paginator.num_pages:
+            end = page_obj.paginator.num_pages
+        return range(start, end+1)
+
+    def get_context_data(self, **kwargs):
+        context = super(GraphListView, self).get_context_data(**kwargs)
+        context['page_range_obj'] = self.get_page_range(context['page_obj'])
+        #处理查询条件
+        search_data = self.request.GET.copy()
+        try:
+            search_data.pop("page")
+        except:
+            pass
+        context.update(search_data.dict())
+        context['search_data'] = "&" + search_data.urlencode()
+        return context

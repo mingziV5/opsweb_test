@@ -18,7 +18,7 @@
             <select class="chosen-select chosen-transparent form-control"  name="product" id="select_product" >
                 <option value="0">请选择</option>
                 {% for product in products %}
-                    <option value="{{ product.id }}" {% if product.id  ==  productid  %}selected{% endif %} >{{ product.pid }}--{{ product.service_name }}</option>
+                    <option value="{{ product.id }}"{% ifequal product.id productid  %} selected {% endifequal %}>{{ product.pid }}--{{ product.service_name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -91,8 +91,8 @@
             var graph_select = $("#graph_select");
 
             add_graph_btn.click(function(){
-                add_graph_modal.modal('show');
-                $.get("", {"id": "{{ productid }}", "outside": "true"}, function(res){
+                //add_graph_modal.modal('show');
+                $.get("{% url 'influx_graph_modify' %}", {"id": "{{ productid }}", "outside": "true"}, function(res){
                     html = "<option value=0 >请选择graph</option>";
                     $.each(res, function(i, obj){
                         html += '<option value="'+ obj.id +'"> '+obj.title+'</option>';
@@ -108,9 +108,9 @@
                 add_graph_modal.modal("hide");
                 graph_id = graph_select.val();
                 $.ajax({
-                    url: "",
+                    url: "{% url 'influx_graph_modify' %}",
                     type: "post",
-                    data: {"graph_id": graph_id},
+                    data: {"graph_id": graph_id, "productid": "{{ productid }}"},
                     success: function (res) {
                         if (res.status != 0){
                             swal("添加失败", res.errmsg, "error")
@@ -142,9 +142,9 @@
             $(".remove_graph").click(function(){
                 graph_id = $(this).attr("data");
                 $.ajax({
-                    url: "",
+                    url: "{% url 'influx_graph_modify' %}",
                     type: "delete",
-                    data: {"graph_id": graph_id},
+                    data: {"graph_id": graph_id, "productid": "{{ productid }}"},
                     success: function (res) {
                         if (res.status != 0){
                             swal("删除失败", res.errmsg, "error")

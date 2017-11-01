@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from django.views.generic import View, TemplateView, ListView
 from django.shortcuts import reverse, redirect
 from django.utils.http import urlquote_plus
@@ -63,6 +63,14 @@ class ManagerGraphView(ListView):
     template_name = 'influx/graph_manager.html'
     model = Graph
 
+    #取出在productid业务线内的graph
+    def get_queryset(self):
+        queryset = super(ManagerGraphView, self).get_queryset()
+        productid = self.request.GET.get('product')
+        if productid:
+            queryset = Graph.objects.filter(product__id=productid)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super(ManagerGraphView, self).get_context_data(**kwargs)
         try:
@@ -74,6 +82,12 @@ class ManagerGraphView(ListView):
             context['products'] = products
         except Exception as e:
             GetLogger().get_logger().error(traceback.format_exc())
+        productid = self.request.GET.get('product', None)
+        try:
+            productid = int(productid)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+        context['productid'] = productid
         return context
 
 class GraphListView(ListView):
@@ -82,11 +96,6 @@ class GraphListView(ListView):
     paginate_by = 10
     before_range_num = 4
     after_range_num = 5
-
-    def get_queryset(self):
-        queryset = super(GraphListView, self).get_queryset()
-        queryset = Graph.objects.all()
-        return queryset
 
     def get_page_range(self, page_obj):
         current_index = page_obj.number
@@ -110,3 +119,61 @@ class GraphListView(ListView):
         context.update(search_data.dict())
         context['search_data'] = "&" + search_data.urlencode()
         return context
+
+class GraphModifyView(View):
+
+    def get(self, request):
+        productid = request.GET.get('id', None)
+        if productid:
+            try:
+                graphs = Graph.objects.exclude(product__id=productid).values('id', 'title')
+            except:
+                GetLogger().get_logger().error(traceback.format_exc())
+        return JsonResponse(list(graphs), safe=False)
+
+    def post(self, request):
+        response = {}
+        graphid = request.POST.get('graph_id')
+        productid = request.POST.get('productid')
+        try:
+            product_obj = Product.objects.get(pk=productid)
+            graph_obj = Graph.objects.get(pk=graphid)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '数据输入出错了，找不到对应模型'
+            return JsonResponse(response)
+        try:
+            graph_obj.product.add(product_obj.id)
+            graph_obj.save()
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '添加关系出错了'
+            return JsonResponse(response)
+        response['status'] = 0
+        return JsonResponse(response)
+
+    def delete(self, request):
+        response = {}
+        data = QueryDict(request.body)
+        graphid = data.get('graph_id', None)
+        productid = data.get('productid', None)
+        try:
+            product_obj = Product.objects.get(pk=productid)
+            graph_obj = Graph.objects.get(pk=graphid)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '数据输入错误，找不到对应模型'
+            return JsonResponse(response)
+        try:
+            graph_obj.product.remove(product_obj.id)
+            graph_obj.save()
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '移除关系出错'
+            return JsonResponse(response)
+        response['status'] = 0
+        return JsonResponse(response)

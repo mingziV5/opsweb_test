@@ -11,6 +11,7 @@ class Idc(models.Model):
 
     class Meta:
         db_table = "resources_idc"
+        ordering = ['id']
 
     def __str__(self):
         return self.full_name

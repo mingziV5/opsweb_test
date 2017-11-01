@@ -7,5 +7,7 @@ class Product(models.Model):
     dev_interface = models.CharField('业务对接人', max_length=150)
     pid = models.IntegerField('上级业务线id', db_index=True)
 
+    class Meta:
+        ordering = ['pid']
     #def __str__(self):
     #    return self.service_name

@@ -14,3 +14,4 @@ class Graph(models.Model):
 
     class Meta:
         db_table = "monitor_influx_graph"
+        ordering = ['id']

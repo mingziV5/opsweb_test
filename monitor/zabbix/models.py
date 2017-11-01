@@ -15,3 +15,4 @@ class ZabbixHost(models.Model):
 
     class Meta:
         db_table = "zabbix_cache_host"
+        ordering = ['ip']

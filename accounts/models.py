@@ -20,3 +20,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, verbose_name='与User模型一对一对应')
     name = models.CharField('中文名称', max_length=32)
     phone = models.CharField('电话号码', max_length=20)
+
+    class Meta:
+        ordering = ['id']

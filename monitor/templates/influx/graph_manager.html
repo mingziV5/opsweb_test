@@ -92,23 +92,26 @@
 
             add_graph_btn.click(function(){
                 //add_graph_modal.modal('show');
-                $.get("{% url 'influx_graph_modify' %}", {"id": "{{ productid }}", "outside": "true"}, function(res){
-                    html = "<option value=0 >请选择graph</option>";
-                    $.each(res, function(i, obj){
-                        html += '<option value="'+ obj.id +'"> '+obj.title+'</option>';
+                if("{{ productid }}" == "None"){
+                    swal('请选择业务线')
+                } else {
+                    $.get("{% url 'influx_graph_product_modify' %}", {"id": "{{ productid }}", "outside": "true"}, function(res){
+                        html = "<option value=0 >请选择graph</option>";
+                        $.each(res, function(i, obj){
+                            html += '<option value="'+ obj.id +'"> '+obj.title+'</option>';
+                        });
+                        graph_select.html(html);
+                        $("#graph_select_chosen").css('width','100%');
+                        graph_select.trigger("chosen:updated");
+                        add_graph_modal.modal('show');
                     });
-                    graph_select.html(html);
-                    $("#graph_select_chosen").css('width','100%');
-                    graph_select.trigger("chosen:updated");
-                    add_graph_modal.modal('show');
-                });
-
+                }
             });
             $("#add_graph_submit_btn").click(function(){
                 add_graph_modal.modal("hide");
                 graph_id = graph_select.val();
                 $.ajax({
-                    url: "{% url 'influx_graph_modify' %}",
+                    url: "{% url 'influx_graph_product_modify' %}",
                     type: "post",
                     data: {"graph_id": graph_id, "productid": "{{ productid }}"},
                     success: function (res) {
@@ -142,7 +145,7 @@
             $(".remove_graph").click(function(){
                 graph_id = $(this).attr("data");
                 $.ajax({
-                    url: "{% url 'influx_graph_modify' %}",
+                    url: "{% url 'influx_graph_product_modify' %}",
                     type: "delete",
                     data: {"graph_id": graph_id, "productid": "{{ productid }}"},
                     success: function (res) {

@@ -69,6 +69,8 @@ class ManagerGraphView(ListView):
         productid = self.request.GET.get('product')
         if productid:
             queryset = Graph.objects.filter(product__id=productid)
+        else:
+            return None
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -120,7 +122,7 @@ class GraphListView(ListView):
         context['search_data'] = "&" + search_data.urlencode()
         return context
 
-class GraphModifyView(View):
+class GraphProductModifyView(View):
 
     def get(self, request):
         productid = request.GET.get('id', None)
@@ -177,3 +179,4 @@ class GraphModifyView(View):
             return JsonResponse(response)
         response['status'] = 0
         return JsonResponse(response)
+

@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^influx', include([
         url(r'^get/$', influx.views.InfluxApiView.as_view(), name='influx_api'),
         url(r'^graph/', include([
-            url(r'modify/$', influx.views.GraphModifyView.as_view(), name='influx_graph_modify'),
+            url(r'modify/$', influx.views.GraphProductModifyView.as_view(), name='influx_graph_product_modify'),
             url(r'^test/$', influx.views.ProductGraphView.as_view(), name='influx_graph'),
             url(r'^create/$', influx.views.CreateGrapView.as_view(), name='influx_graph_create'),
             url(r'^list/$', influx.views.GraphListView.as_view(), name='influx_graph_list'),

@@ -147,8 +147,9 @@ class ServerModifyProductView(TemplateView):
         context = super(ServerModifyProductView, self).get_context_data(**kwargs)
         server_id = self.request.GET.get("id", None)
         context['server'] = get_object_or_404(Server, pk=server_id)
-        context['products'] = Product.objects.filter(Q(pid=0)|Q(pid=server_id))
-        print(context['products'])
+        #context['products'] = Product.objects.filter(Q(pid=0)|Q(pid=server_id))
+        #print(context)
+        context['products'] = Product.objects.values('id', 'service_name', 'pid')
         return context
 
     def post(self, request):

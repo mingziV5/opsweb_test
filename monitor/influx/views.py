@@ -31,7 +31,7 @@ class ProductGraphView(TemplateView):
             context['series'] = json.dumps(cli.series)
             context['categories'] =cli.categories
         except:
-            pass
+            GetLogger().get_logger().error(traceback.format_exc())
         return context
 
 class CreateGrapView(TemplateView):
@@ -43,7 +43,7 @@ class CreateGrapView(TemplateView):
             cli = influxdbCli()
             context['measurements'] = cli.measurements
         except:
-            pass
+            GetLogger().get_logger().error(traceback.format_exc())
         return context
 
     def post(self, request):

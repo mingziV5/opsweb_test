@@ -38,7 +38,7 @@
                     <option value="">请选择</option>
                     {% for product in products %}
                         {% if product.pid == server.service_id %}
-                        <option value="{{ product.id }}" {% if server.server_purpose  == product.id %}selected{% endif %}>{{ product.service_name }}</option>
+                        <option value="{{ product.id }}" {% if server.server_purpose == product.id %}selected{% endif %}>{{ product.service_name }}</option>
                         {% endif %}
                     {% endfor %}
                 </select>

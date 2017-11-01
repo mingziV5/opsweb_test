@@ -1,0 +1,86 @@
+{% extends "public/layout.html" %}
+
+{% block body %}
+    <form class="form-horizontal" role="form" parsley-validate id="vmform" method="post">
+        {% csrf_token %}
+        <input name="id" value="{{ graph_obj.id }}" type="hidden">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">标题 *</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="title" value="{{ graph_obj.title }}" autocomplete="off"  parsley-trigger="change" parsley-required="true" parsley-minlength="4" parsley-validation-minlength="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">子标题 *</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="subtitle" value="{{ graph_obj.subtitle }}" autocomplete="off"  >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label  class="col-sm-2 control-label">数据点单位 *</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="unit" value="{{ graph_obj.unit }}" autocomplete="off"  parsley-trigger="change" parsley-required="true" parsley-minlength="1" parsley-validation-minlength="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label  class="col-sm-2 control-label">measurement *</label>
+            <div class="col-sm-8" id="measurement">
+                <select class="chosen-select chosen-transparent form-control" name="measurement" id="select_measurement" parsley-trigger="change" parsley-required="true" parsley-error-container="#measurement">
+                    <option value="0">请选择measurement</option>
+                    {% for measurement in measurements %}
+                        <option value="{{ measurement }}" {% if graph_obj.measurement == measurement %} selected {% endif %}>{{ measurement }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="select_status" class="col-sm-2 control-label">是否动态主机名 *</label>
+            <div class="col-sm-8" id="idc">
+                <label class="radio-inline">
+                    <input type="radio" name="auto_hostname" {% if graph_obj.auto_hostname %} checked {% endif %} value="1">使用
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="auto_hostname" {% if not graph_obj.auto_hostname %} checked {% endif %} value="0">不使用
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label  class="col-sm-2 control-label">字段过滤</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="field_expression"  value="{{ graph_obj.field_expression }}" autocomplete="off">
+            </div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label">格式化tooltip_formatter：</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="tooltip_formatter" value="{{ graph_obj.tooltip_formatter }}" autocomplete="off">
+            </div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label">格式化Y轴：</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="yaxis_formatter" value="{{ graph_obj.yaxis_formatter }}" autocomplete="off">
+            </div>
+        </div>
+
+
+        <div class="form-group form-footer">
+            <div class="col-sm-offset-4 col-sm-8">
+                <button type="submit" class="btn btn-primary" id="submit_button">修改</button>
+                <button type="button" class="btn btn-success">测试</button>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block js %}
+    <script>
+        $(function(){
+            $(".chosen-select").chosen({disable_search_threshold: 8});
+        })
+    </script>
+{% endblock %}

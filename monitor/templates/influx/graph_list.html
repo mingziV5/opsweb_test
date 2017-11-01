@@ -43,7 +43,7 @@
                             </td>
                             <td> {{ graph.field_expression }} </td>
                             <td>
-                                <button type="button" class="btn btn-success btn-sm">详情</button>
+                                <a type="button" class="btn btn-success btn-sm" href="{% url 'influx_graph_modify' %}?graphid={{ graph.id }}">详情</a>
                             </td>
                         </tr>
                     {% endfor %}

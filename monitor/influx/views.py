@@ -3,7 +3,7 @@ from django.views.generic import View, TemplateView, ListView
 from django.shortcuts import reverse, redirect
 from django.utils.http import urlquote_plus
 from monitor.influx.models import Graph
-from monitor.influx.forms import CreateGraphForm
+from monitor.influx.forms import CreateGraphForm, UpdateGraphForm
 from monitor.influx.influxdbCli import influxdbCli
 from resources.product.models import Product
 from opsweb.utils import GetLogger
@@ -179,4 +179,45 @@ class GraphProductModifyView(View):
             return JsonResponse(response)
         response['status'] = 0
         return JsonResponse(response)
+
+class GraphModifyView(TemplateView):
+    template_name = 'influx/update_graph.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(GraphModifyView, self).get_context_data(**kwargs)
+        graph_id = self.request.GET.get('graphid', None)
+        try:
+            graph_obj = Graph.objects.get(pk=graph_id)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+        context['graph_obj'] = graph_obj
+        try:
+            cli = influxdbCli()
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+        context['measurements'] = cli.measurements
+        return context
+
+    def post(self, request):
+        next_url = urlquote_plus(request.GET.get('next', None) if request.GET.get('next', None) else reverse('influx_graph_list'))
+        form = UpdateGraphForm(request.POST)
+        if form.is_valid():
+            try:
+                graph_id = form.cleaned_data.get('id')
+                graph_obj = Graph.objects.get(pk=graph_id)
+                graph_obj.title = form.cleaned_data.get('title')
+                graph_obj.subtitle = form.cleaned_data.get('subtitle')
+                graph_obj.unit = form.cleaned_data.get('unit')
+                graph_obj.measurement = form.cleaned_data.get('measurement')
+                graph_obj.auto_hostname = form.cleaned_data.get('auto_hostname')
+                graph_obj.field_expression = form.cleaned_data.get('field_expression')
+                graph_obj.tooltip_formatter = form.cleaned_data.get('tooltip_formatter')
+                graph_obj.yaxis_formatter = form.cleaned_data.get('yaxis_formatter')
+                graph_obj.save()
+                return redirect('success', next=next_url)
+            except Exception as e:
+                GetLogger().get_logger().error(traceback.format_exc())
+                return redirect('error', next=next_url, msg=e.args)
+        else:
+            return redirect('error', next=next_url, msg=form.errors.as_json())
 

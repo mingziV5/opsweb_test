@@ -59,6 +59,21 @@ class CreateGrapView(TemplateView):
         else:
             return redirect('error', next=next_url, msg=form.errors.as_json())
 
+class TestGrapView(View):
+    def get(self, request):
+        ret = []
+        measurement = request.GET.get('measurement', None)
+        field_expression = request.GET.get('field_expression', None)
+        measurement = measurement.strip()
+        field_expression = field_expression.strip()
+        try:
+            cli = influxdbCli()
+            ret = cli.get_series(measurement, field_expression)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+        return JsonResponse(ret, safe=False)
+
+
 class ManagerGraphView(ListView):
     template_name = 'influx/graph_manager.html'
     model = Graph

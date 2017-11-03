@@ -51,7 +51,7 @@
         <div class="form-group">
             <label  class="col-sm-2 control-label">字段过滤</label>
             <div class="col-sm-8">
-                <input type="text" class="form-control" name="field_expression" autocomplete="off">
+                <input type="text" class="form-control" name="field_expression" id="field_expression" autocomplete="off">
             </div>
         </div>
         <div class="form-group">
@@ -74,7 +74,7 @@
             <div class="col-sm-offset-4 col-sm-8">
                 <button type="submit" class="btn btn-primary" id="submit_button">提交</button>
                 <button type="reset" class="btn btn-default">重置</button>
-                <button type="button" class="btn btn-success">测试</button>
+                <button type="button" class="btn btn-success" id="test_button">测试</button>
             </div>
         </div>
     </form>
@@ -83,6 +83,25 @@
     <script>
         $(function(){
             $(".chosen-select").chosen({disable_search_threshold: 8});
+        })
+
+        $(function() {
+            $("#test_button").click(function(){
+                var measurement = $("#select_measurement").val()
+                var field_expression = $("#field_expression").val()
+                if (measurement == 0) {
+                    swal("失败", 'measurement不能空', "error")
+                } else {
+                    $.get("{% url 'influx_graph_test' %}", {"measurement": measurement, "field_expression": field_expression}, function(res){
+                            console.log(res)
+                            var main
+                            $.each(res['value'], function(i, obj){
+                                main += obj
+                            });
+                            console.log(main)
+                        });
+                }
+            })
         })
     </script>
 {% endblock %}

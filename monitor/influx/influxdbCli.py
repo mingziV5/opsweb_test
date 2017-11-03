@@ -21,6 +21,13 @@ class influxdbCli():
             ret.append(time.strftime(format_str, time.localtime(point)))
         return ret
 
+    def get_series(self, measurement, field_expression):
+        if field_expression:
+            field_expression = 'where ' + field_expression
+        sql = "show series from {} {}".format(measurement, field_expression)
+        series = self.client.query(sql).get_points()
+        return [s['_key'] for s in series]
+
     def query(self):
         hostnames = ["ubuntu-xenial", "localhost"]
         sql = ""

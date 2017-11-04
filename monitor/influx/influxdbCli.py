@@ -3,7 +3,7 @@ import time
 
 class influxdbCli():
     def __init__(self):
-        self.client = InfluxDBClient("192.168.0.201", database="collectd")
+        self.client = InfluxDBClient("192.168.1.201", database="collectd")
         #x轴数据
         self.categories = []
         #图形数据点
@@ -26,7 +26,8 @@ class influxdbCli():
             field_expression = 'where ' + field_expression
         sql = "show series from {} {}".format(measurement, field_expression)
         series = self.client.query(sql).get_points()
-        return [s['_key'] for s in series]
+        #influxdb _key or key why??
+        return [s['key'] for s in series]
 
     def query(self):
         hostnames = ["ubuntu-xenial", "localhost"]

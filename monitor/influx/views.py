@@ -66,6 +66,10 @@ class TestGrapView(View):
         field_expression = request.GET.get('field_expression', None)
         measurement = measurement.strip()
         field_expression = field_expression.strip()
+        if not measurement:
+            ret['status'] = 1
+            ret['errmsg'] = 'measurement不能空'
+            return JsonResponse()
         try:
             cli = influxdbCli()
             ret = cli.get_series(measurement, field_expression)

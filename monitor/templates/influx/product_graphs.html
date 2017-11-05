@@ -1,0 +1,171 @@
+{% extends "public/layout.html" %}
+
+{% block css %}
+<style>
+
+        #contain img{margin: 10px auto;}
+        #time{margin-top:10px;margin-left:0px;}
+        #contain button{margin-top:2px; }
+        .graph{width: 100%; height:350px;background: #ccc;margin-top:10px;}
+    </style>
+
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="form-group col-xs-4">
+            <select class="chosen-select chosen-transparent form-control"  name="product" id="select_product" >
+                <option value="0">请选择</option>
+                {% for product in products %}
+                    <option value="{{ product.id }}" {% if product.id  == productid  %}selected{% endif %} >{{ product.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div id="time" class="text-left row time_btns">
+        <button class="btn btn-success" type="button" data="30m">半小时</button>
+        <button class="btn btn-default" type="button" data="5h">5小时</button>
+        <button class="btn btn-default" type="button" data="12h">12小时</button>
+        <button class="btn btn-default" type="button" data="1d">1天</button>
+    </div>
+    <div id="graph_images"></div>
+{% endblock %}
+
+{% block js %}
+    <script src="/static/js/echarts.min.js"></script>
+    <script src="/static/js/influx_graph_conf.js"></script>
+<script>
+    var product_id;                                 // 当前业务线id
+    var graph_images = $("#graph_images");          // 图形所在
+    var influx_api = "{% url 'influx_api' %}";      // 获取influxdb 数据的api
+    var graphs ;                                    // 当前业务线所有的图形
+    var sh;         // set
+    var graph_time = "30m";
+
+    var graph_info = new Array();
+
+    function flush_graph(influx_api, obj, graph_id) {
+        //obj.showLoading();
+        $.ajax({
+            url: influx_api,
+            type: "get",
+            data: {"graph_id": graph_id, "graph_time": graph_time, "product_id":product_id},
+            success: function (res) {
+                if (res.status != 0){
+                    swal("操作失败", res.errmsg, "error")
+                }else{
+                    obj.hideLoading();
+
+                    obj.setOption({
+                        xAxis: {
+                            data: res.categories
+                        },
+                        series: res.series
+                    });
+                }
+            }
+        });
+    }
+
+    function flush(){
+        $.each(graph_info,function(index,obj){
+            flush_graph(influx_api, obj["chart"], obj["id"]);
+        });
+    }
+    function set_interval(){
+        setTimeout(function(){
+            clearInterval(sh);
+            sh=setInterval(function(){
+                flush();
+            },5000);
+        }, 1000)
+    }
+
+    function showloading(){
+        $.each(graph_info,function(index,obj){
+             obj["chart"].showLoading()
+        });
+    }
+
+    function init() {
+        graph_images.empty();
+        $.each(graphs, function (i, obj) {
+            var div_id = "product_graph_"+ obj.id;
+            graph_images.append('<div id="'+div_id +'" class="graph"></div>');
+            var graph_div = document.getElementById(div_id);
+            var myChart = echarts.init(graph_div);
+            option = {
+                "title": {
+                    "text": obj.title,
+                    "subtext": obj.subtitle?obj.subtitle:"",
+                    "link": "{% url 'influx_graph_detail' %}?pk="+ obj.id
+                },
+                "yAxis": {
+                    "name":  obj.unit?obj.unit:""
+                }
+            };
+            // 设置 tooltip formatter
+            if(obj.tooltip_formatter){
+                option["tooltip"] = {};
+                option["tooltip"]["formatter"] = function(params){
+                    var ret = params[0].axisValueLabel + "<br>";
+                    $.each(params, function(i, graph_obj){
+                        var value;
+                        if(graph_obj.value ){
+                            value = eval(obj.tooltip_formatter) +" "+ obj.unit
+                        }else{
+                            value = "";
+                        }
+                        ret += graph_obj.marker + " "  + graph_obj.seriesName + ": " + value + "</br>"
+                    });
+                    return ret
+                }
+            }
+
+            if (obj.yaxis_formatter){
+                option['yAxis']['axisLabel'] = {};
+                option['yAxis']['axisLabel']['formatter'] = function(category){
+                    return eval(obj.yaxis_formatter)
+                }
+            }
+
+
+            myChart.setOption(graph_option);
+            myChart.setOption(option);
+            flush_graph(influx_api, myChart, obj.id);
+            graph_info.push({"chart":myChart, "id": obj.id})
+        });
+    }
+
+    $(function(){
+        $(".chosen-select").chosen({disable_search_threshold: 8});
+
+        $("#select_product").change(function(){
+            product_id = $(this).val();
+            if (product_id == "0"){
+                graphs = [];
+                init();
+                return false;
+            }
+            $.get("{% url 'influx_graph_detail' %}", {"id": product_id}, function(res){
+                graphs = res;
+                init();
+                set_interval()
+            })
+        });
+
+
+        $("#time button").click(function(){
+            showloading();
+            var click_obj = $(this);
+            click_obj.removeClass("btn-default").addClass("btn-success").siblings(".btn-success").removeClass("btn-success").addClass("btn-default");
+            graph_time = click_obj.attr("data");
+            flush();
+            set_interval();
+        });
+
+        // 按时间加载
+
+    })
+</script>
+{% endblock %}

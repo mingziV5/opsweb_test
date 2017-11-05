@@ -111,17 +111,26 @@
                 var graph_test_modal = $("#graph_test_modal")
                 if (measurement == 0) {
                     swal("失败", 'measurement不能空', "error")
+                    return
                 } else {
-
                     $.get("{% url 'influx_graph_test' %}", {"measurement": measurement, "field_expression": field_expression}, function(res){
-                        if
-                        var html = '<div class="col-xs-12"><h4>线条</h4></div>'
-                        $.each(res, function(index, value){
-                            html += '<div class="col-xs-12"><h4>' + value + '</h4></div>'
-                        });
-                        $('#graph_test_body').html(html)
+                        if(res.status != 0){
+                            swal('错误', res.errmsg, 'error')
+                        } else {
+                            if (res.data.length == 0) {
+                                swal('查询成功', '没有查询结果', 'error')
+                            } else {
+                                var html = '<div class="col-xs-12"><h4>线条</h4></div>'
+                                $.each(res.data, function (index, value) {
+                                    html += '<div class="col-xs-12"><h4>' + value + '</h4></div>'
+                                });
+                                $('#graph_test_body').html(html)
+                                graph_test_modal.modal('show')
+                            }
+
+                        }
                     });
-                    graph_test_modal.modal('show')
+
                 }
             })
         })

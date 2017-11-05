@@ -6,10 +6,13 @@ from monitor.influx.models import Graph
 from monitor.influx.forms import CreateGraphForm, UpdateGraphForm
 from monitor.influx.influxdbCli import influxdbCli
 from resources.product.models import Product
+from resources.server.models import Server
 from opsweb.utils import GetLogger
 import json
 import traceback
 
+
+'''
 class InfluxApiView(View):
     def get(self, request):
         ret = {}
@@ -20,8 +23,9 @@ class InfluxApiView(View):
         ret['categories'] = cli.categories
         return JsonResponse(ret, safe=False)
 
+
 class ProductGraphView(TemplateView):
-    template_name = 'influx/product_graph.html'
+    template_name = 'influx/product_graph_test.html'
 
     def get_context_data(self, **kwargs):
         context = super(ProductGraphView, self).get_context_data(**kwargs)
@@ -33,6 +37,84 @@ class ProductGraphView(TemplateView):
         except:
             GetLogger().get_logger().error(traceback.format_exc())
         return context
+'''
+
+class ProductGraphView(TemplateView):
+    template_name = "influx/product_graphs.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductGraphView, self).get_context_data(**kwargs)
+        context["products"] = self.get_product()
+        return context
+
+    def get_product(self):
+        products = Product.objects.all()
+        ret = []
+        #{"id":2, "name":"ms-web"}
+        for obj in products.filter(pid__exact=0):
+            for product in products.filter(pid__exact=obj.id):
+                ret.append({
+                    "id": product.id,
+                    "name":"{}->{}".format(obj.service_name, product.service_name)
+                })
+        return ret
+
+
+class InfluxApiView(View):
+    def get(self, request):
+        # graph_id=7&graph_time=30m
+        ret = {"status":0}
+        graph_id = request.GET.get("graph_id", None)
+        graph_time = request.GET.get("graph_time", None)
+        product_id = request.GET.get("product_id", None)
+
+        try:
+            graph_obj = Graph.objects.get(pk=graph_id)
+        except:
+            ret["status"] = 1
+            ret["errmsg"] = "graph 不存在"
+            return JsonResponse(ret)
+
+        try:
+            product_obj = Product.objects.get(pk=product_id)
+            if product_obj.pid == 0:
+                ret["status"] = 1
+                ret["errmsg"] = "业务线异常"
+                return JsonResponse(ret)
+        except:
+            ret["status"] = 1
+            ret["errmsg"] = "业务线异常"
+            return JsonResponse(ret)
+
+
+        client = influxdbCli()
+        client.hostnames = [s["hostname"] for s in Server.objects.filter(server_purpose__exact=product_obj.id).values("hostname")]
+        client.graph_obj = graph_obj
+        client.graph_time = graph_time
+
+        client.query()
+        ret["series"] = client.series
+        ret["categories"] = client.categories
+        return JsonResponse(ret,safe=False)
+
+class GraphGetView(View):
+    def get(self, request):
+        productid = request.GET.get("id",None)
+        outside = request.GET.get("outside", False)
+
+        try:
+            product_obj = Product.objects.get(pk=productid)
+            if product_obj.pid == 0:
+                return JsonResponse([], safe=False)
+        except Product.DoesNotExist:
+            return JsonResponse([], safe=False)
+
+        queryset = Graph.objects.values()
+        if outside:
+            queryset = queryset.exclude(product__id=productid)
+        else:
+            queryset = queryset.filter(product__id=productid)
+        return JsonResponse(list(queryset), safe=False)
 
 class CreateGrapView(TemplateView):
     template_name = 'influx/create_graph.html'
@@ -61,18 +143,20 @@ class CreateGrapView(TemplateView):
 
 class TestGrapView(View):
     def get(self, request):
-        ret = []
+        ret = {}
         measurement = request.GET.get('measurement', None)
         field_expression = request.GET.get('field_expression', None)
         measurement = measurement.strip()
         field_expression = field_expression.strip()
-        if not measurement:
+        cli = influxdbCli()
+        if not measurement or measurement not in cli.measurements:
             ret['status'] = 1
-            ret['errmsg'] = 'measurement不能空'
+            ret['errmsg'] = 'measurement不能空或者数据不正确'
             return JsonResponse()
         try:
-            cli = influxdbCli()
-            ret = cli.get_series(measurement, field_expression)
+            series = cli.get_series(measurement, field_expression)
+            ret['data'] = series
+            ret['status'] = 0
         except:
             GetLogger().get_logger().error(traceback.format_exc())
         return JsonResponse(ret, safe=False)
@@ -96,20 +180,24 @@ class ManagerGraphView(ListView):
         context = super(ManagerGraphView, self).get_context_data(**kwargs)
         try:
             #context['products'] = Product.objects.exclude(pid=0)
-            products = Product.objects.exclude(pid=0)
+            products = Product.objects.exclude(pid=0).values('id', 'pid', 'service_name')
             for p in products:
-                p_service_name = Product.objects.get(id=p.pid).service_name
-                p.pid = p_service_name
+                print(p)
+                p_service_name = Product.objects.get(id=p['pid']).service_name
+                p['pid'] = p_service_name
             context['products'] = products
         except Exception as e:
             GetLogger().get_logger().error(traceback.format_exc())
+        context.update(self.get_args())
+        return context
+
+    def get_args(self):
         productid = self.request.GET.get('product', None)
         try:
-            productid = int(productid)
+            return {'productid': int(productid)}
         except:
             GetLogger().get_logger().error(traceback.format_exc())
-        context['productid'] = productid
-        return context
+            return {}
 
 class GraphListView(ListView):
     template_name = 'influx/graph_list.html'
@@ -143,6 +231,7 @@ class GraphListView(ListView):
 
 class GraphProductModifyView(View):
 
+    #不在业务线下的graph
     def get(self, request):
         productid = request.GET.get('id', None)
         if productid:
@@ -164,7 +253,12 @@ class GraphProductModifyView(View):
             response['status'] = 1
             response['errmsg'] = '数据输入出错了，找不到对应模型'
             return JsonResponse(response)
+        if product_obj.pid == 0:
+            response['status'] = 1
+            response['errmsg'] = '请选择次级业务线'
+            return JsonResponse(response)
         try:
+            #product_obj.graph_set.add(graph_obj)
             graph_obj.product.add(product_obj.id)
             graph_obj.save()
         except:

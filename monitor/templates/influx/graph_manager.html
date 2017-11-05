@@ -150,10 +150,10 @@
                     data: {"graph_id": graph_id, "productid": "{{ productid }}"},
                     success: function (res) {
                         if (res.status != 0){
-                            swal("删除失败", res.errmsg, "error")
+                            swal("移除失败", res.errmsg, "error")
                         }else{
                             swal({
-                                "title": "删除成功!",
+                                "title": "移除成功!",
                                 "text": "",
                                 "type": "success"
                                 },function(){

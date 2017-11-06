@@ -3,14 +3,14 @@ import time
 
 class influxdbCli():
     def __init__(self):
-        self.client = InfluxDBClient("192.168.1.201", database="collectd")
+        self.client = InfluxDBClient("192.168.0.201", database="collectd")
         #x轴数据
         self.categories = []
         #图形数据点
         self.series = []
         self.measurements = self.get_measurements()
 
-        self.hostname = []
+        self.hostnames = []
         self.graph_obj = None
         self.graph_time = '30m'
 
@@ -56,8 +56,7 @@ class influxdbCli():
                 self.process_data(hostname, result[index].get_points())
         else:
             self.process_data(hostnames[0], result.get_points())
-    '''
-
+    
     def query(self):
         where = ""
         if self.graph_obj.field_expression:
@@ -79,7 +78,21 @@ class influxdbCli():
 
         for index, hostname in enumerate(self.hostnames):
             self.process_data(hostname, result[index].get_points())
+    '''
+    def query(self):
+        where = ''
+        if self.graph_obj.field_expression:
+            where += 'and' + ' ' + self.graph_obj.field_expression
+        sql = ""
+        for hostname in self.hostnames:
+            sql += """select mean(value) as value from {} where time > now() - {} {} and host = '{}' group by time(10s) order by time desc;""".format(self.graph_obj.measurement, self.graph_time, where, hostname)
+        result = self.client.query(sql, epoch="s")
 
+        if len(self.hostnames) == 1:
+            self.process_data(self.hostnames[0], result.get_points())
+        else:
+            for index, hostname in enumerate(self.hostnames):
+                self.process_data(hostname, result[index].get_points())
 
     def process_data(self, hostname, data_points):
         serie = {}

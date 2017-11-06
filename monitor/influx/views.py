@@ -37,7 +37,6 @@ class ProductGraphView(TemplateView):
         except:
             GetLogger().get_logger().error(traceback.format_exc())
         return context
-'''
 
 class ProductGraphView(TemplateView):
     template_name = "influx/product_graphs.html"
@@ -58,9 +57,39 @@ class ProductGraphView(TemplateView):
                     "name":"{}->{}".format(obj.service_name, product.service_name)
                 })
         return ret
+'''
+class  ProductGraphView(TemplateView):
+    template_name = "influx/product_graphs.html"
 
+    def get_context_data(self, **kwargs):
+        context = super(ProductGraphView, self).get_context_data(**kwargs)
+        context["products"] = self.get_product()
+        return context
+
+    def get_product(self):
+        products = Product.objects.all()
+        ret = []
+        # 数据格式
+        # {"id":2, "name": "ms-web"}
+        '''
+        for obj in products.filter(pid__exact=0):
+            for product in products.filter(pid__exact=obj.id):
+                ret.append({
+                    "id": product.id,
+                    "name": "{}->{}".format(obj.service_name, product.service_name)
+                })
+        '''
+        #循环一次
+        for product in products.exclude(pid__exact=0):
+            pervious_service_name = products.get(id=product.pid).service_name
+            ret.append({
+                "id": product.id,
+                "name": "{}->{}".format(pervious_service_name, product.service_name)
+            })
+        return ret
 
 class InfluxApiView(View):
+    '''
     def get(self, request):
         # graph_id=7&graph_time=30m
         ret = {"status":0}
@@ -96,6 +125,44 @@ class InfluxApiView(View):
         ret["series"] = client.series
         ret["categories"] = client.categories
         return JsonResponse(ret,safe=False)
+    '''
+
+    def get(self, request):
+        #数据请求格式 graph_id=7 & graph_time=30m &product_id=1
+        ret = {"status": 0}
+        graph_id = request.GET.get("graph_id", None)
+        graph_time = request.GET.get("graph_time", None)
+        product_id = request.GET.get("product_id", None)
+
+        try:
+            graph_obj = Graph.objects.get(pk=graph_id)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            ret['status'] = 1
+            ret['errmsg'] = "graph 不存在"
+            return JsonResponse(ret)
+
+        try:
+            product_obj = Product.objects.get(pk=product_id)
+            if product_obj.pid == 0:
+                ret['status'] = 1
+                ret['errmsg'] = "顶级业务线没有图形"
+                return JsonResponse(ret)
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            ret['status'] = 1
+            ret['errmsg'] = '业务线异常'
+            return JsonResponse(ret)
+
+        client = influxdbCli()
+        client.hostnames = [s["hostname"] for s in Server.objects.filter(server_purpose__exact=product_obj.id).values('hostname')]
+        client.graph_obj = graph_obj
+        client.graph_time = graph_time
+
+        client.query()
+        ret['series'] = client.series
+        ret['categories'] = client.categories
+        return JsonResponse(ret, safe=False)
 
 class GraphGetView(View):
     def get(self, request):

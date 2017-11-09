@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'resources',
     'permissions',
     'monitor',
+    'inception',
 ]
 
 MIDDLEWARE = [

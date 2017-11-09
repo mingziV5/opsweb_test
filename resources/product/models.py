@@ -9,5 +9,6 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['pid']
-    #def __str__(self):
-    #    return self.service_name
+
+    def __str__(self):
+        return self.service_name

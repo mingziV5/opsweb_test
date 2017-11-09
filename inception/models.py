@@ -14,17 +14,17 @@ class MasterConfig(models.Model):
         link_name = self.cluster_name + '_' + self.db_name
         return link_name
 
-class SqlWorkStatus(models.Model):
-    status = models.CharField('工单状态', max_length=50)
+class SqlWorkflowStatus(models.Model):
+    status_name = models.CharField('工单状态', max_length=50)
 
-class SqlWorkFlow(models.Model):
+class SqlWorkflow(models.Model):
     workflow_name = models.CharField('sql工单名称', max_length=100)
     proposer = models.CharField('申请人', max_length=150)
     reviewer = models.CharField('审核人', max_length=150)
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
     review_time = models.DateTimeField('审核时间', null=True, blank=True)
     finish_time = models.DateTimeField('结束时间', null=True, blank=True)
-    status = models.ForeignKey(SqlWorkStatus)
+    status = models.ForeignKey(SqlWorkflowStatus)
     backup = models.CharField('是否备份', choices=((0, '否'),(1, '是')), max_length=10)
     review_content = models.TextField('自动审核返回的JSON')
     cluster_db_name = models.CharField('执行目标库', max_length=200)

@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^resource/', include('resources.urls')),
     url(r'^permission/', include('permissions.urls')),
     url(r'^monitor/', include('monitor.urls')),
+    url(r'^inception/', include('inception.urls')),
 ]

@@ -1,0 +1,96 @@
+{% extends 'public/layout.html' %}
+
+{% block breadcrumb %}
+    <li><a href="#">sql任务</a><span class="divider"></span></li>
+    <li class="active">sql任务列表</li>
+{% endblock %}
+
+{% block body %}
+        <ul class="nav nav-tabs">
+            <li>
+                 <a href="#">全部工单</a>
+            </li>
+            <li>
+                 <a href="#">待审核的</a>
+            </li>
+            <li>
+                 <a href="#">执行中</a>
+            </li>
+            <li>
+                 <a href="#">已执行完毕</a>
+            </li>
+            <li>
+                 <a href="#">人工终止流程</a>
+            </li>
+            <li>
+                 <a href="#">自动审核不通过</a>
+            </li>
+        </ul>
+
+    <div class="tile-body color transparent-black rounded-corners">
+        <div class="table-responsive">
+            <table  class="table table-datatable table-custom" id="basicDataTable">
+                <thead>
+                    <tr>
+                        <th class="">工单序号</th>
+                        <th class="">工单名称</th>
+                        <th class="">工单申请人</th>
+                        <th class="">工单状态</th>
+                        <th class="">发起时间</th>
+                        <th class="">目标数据库</th>
+                        <th class="">操作</th>
+                    </tr>
+
+                </thead>
+                <tbody>
+
+                    {% for workflow in object_list %}
+                        <tr class="gradeA">
+                            <td> {{ forloop.counter }} </td>
+                            <td> {{ workflow.workflow_name }} </td>
+                            <td> {{ workflow.proposer }} </td>
+                            <td> {{ workflow.status.status_name }} </td>
+                            <td> {{ workflow.create_time|date:"Y-m-d H:i:s" }} </td>
+                            <td> {{ workflow.cluster_db_name }} </td>
+                            <td>
+                                <a type="button" class="btn btn-success btn-sm" href="#">详情操作</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- tile body -->
+
+    <div class="tile-footer text-center">
+
+        <ul class="pagination pagination-sm nomargin pagination-custom">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?page={{ page_obj.previous_page_number }}{{ uri }}"><i class="fa fa-angle-double-left"></i></a>
+                </li>
+            {% else %}
+                <li class="disabled">
+                    <a href="#"><i class="fa fa-angle-double-left"></i></a>
+                </li>
+            {% endif %}
+
+            {% for page in paginator.page_range %}
+                <li {% if page_obj.number == page %}class="active"{% endif %}><a href="?page={{ page }}{{ uri }}" >{{ page }}</a></li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?page={{ page_obj.next_page_number }}{{ uri }}"><i class="fa fa-angle-double-right"></i></a>
+                </li>
+            {% else %}
+                <li class="disabled">
+                <a href="#"><i class="fa fa-angle-double-right"></i></a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+
+{% endblock %}

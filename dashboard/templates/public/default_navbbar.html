@@ -38,7 +38,7 @@
                 </ul>
             </li> <!--CMDB资产平台结束-->
 
-            <li><!--代码管理-->
+            <li><!--监控管理-->
                 <a href="#" ><i class="fa fa-file-code-o fa-fw"></i>监控配置<span class="fa arrow"></span></a>
                 <ul class="nav nav-second-level collapse" >
                     <li>
@@ -57,7 +57,16 @@
                         <a href="{% url 'influx_product_graph' %}" class="menu-link">图形仪表盘</a>
                     </li>
                 </ul>
-            </li> <!--代码管理结束-->
+            </li> <!--监控管理-->
+
+            <li><!--sql模块-->
+                <a href="#" ><i class="fa fa-file-code-o fa-fw"></i>sql执行模块<span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" >
+                    <li>
+                        <a href="{% url 'inception_workflow_list' %}" class="menu-link">sql工单列表</a>
+                    </li>
+                </ul>
+            </li> <!--sql模块-->
         </ul><!--菜单列表结束-->
     </div><!--sidebar-collapse end -->
 </div><!--navbar-static-side 左边菜单结束 -->

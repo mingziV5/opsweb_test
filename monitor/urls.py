@@ -12,7 +12,7 @@ urlpatterns = [
             url(r'^gettemplate/$', zabbix.views.GetHostTemplatesView.as_view(), name='zabbix_host_templates'),
         ])),
     ])),
-    url(r'^influx', include([
+    url(r'^influx/', include([
         url(r'^get/$', influx.views.InfluxApiView.as_view(), name='influx_api'),
         url(r'^graph/', include([
             url(r'^modify/$', influx.views.GraphProductModifyView.as_view(), name='influx_graph_product_modify'),

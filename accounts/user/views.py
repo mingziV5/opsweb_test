@@ -115,7 +115,7 @@ class UserListView(LoginRequiredMixin, ListView):
         return range(start, end+1)
 
     def get_context_data(self, **kwargs):
-        self.set_paginate_by(2)
+        #self.set_paginate_by(2)
         context = super(UserListView, self).get_context_data(**kwargs)
         context['page_range_obj'] = self.get_page_range(context['page_obj'])
 
@@ -236,6 +236,7 @@ class SearchUserView(LoginRequiredMixin, MyPermissionRequiredMixin, ListView):
 
         #处理查询条件
         search_data = self.request.GET.copy()
+        context['search_username'] = search_data.get('username', None)
         try:
             search_data.pop("page")
         except:

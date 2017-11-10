@@ -9,7 +9,7 @@
     <div class="container-fluid">
         <div class="row clearfix" style="position:relative">
 
-        <form id="form-submitsql" action="#" method="post" class="form-horizontal" role="form">
+        <form id="form-submitsql" action="{% url 'inception_workflow_create' %}" method="post" class="form-horizontal" role="form">
             {% csrf_token %}
             <!--<input type="hidden" id="workflowid" name="workflowid"/>-->
             <div class="col-md-8 column">
@@ -17,51 +17,46 @@
             </div>
 
             <div class="col-md-4 column" >
-                    <div class="form-group">
-                        <input id="workflow_name" type="text" name="workflow_name" class="form-control" data-name="上线单名称" placeholder="请输入上线单名称" required>
-                    </div>
-                    <div class="form-group">
-                        <select id="cluster_db_name" name="cluster_db_name" class="selectpicker show-tick form-control bs-select-hidden" data-name="要上线的目标数据库" data-placeholder="要上线的目标数据库:" required>
-                            <option value="is-empty" disabled="" selected="selected">请选择要上线的集群:</option>
-                            {% for cluster_name,dbs in dictAllClusterDb.items %}
-                                <option value="{{cluster_name}}">{{cluster_name}}集群 (包含db：
-                                {% for db in dbs %}
-                                    {{db}}{% if not forloop.last %},{% endif%}
-                                {% endfor %}
-                                )
-                                </option>
-                            {% endfor %}
-
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select id="backup" name="backup" class="selectpicker show-tick form-control bs-select-hidden" data-name="是否选择备份" data-placeholder="请选择是否要备份:" required>
-                            <option value="is-empty" disabled="" selected="selected">请选择是否要备份:</option>
-                            <option value="1">是</option>
-                            <option value="0">否</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select id="review_man" name="review_man" class="selectpicker show-tick form-control bs-select-hidden" data-name="审核人" data-placeholder="请选择审核人:" required>
+                <div class="form-group">
+                    <input id="workflow_name" type="text" name="workflow_name" class="form-control" data-name="上线单名称" placeholder="请输入上线单名称" required>
+                </div>
+                <div class="form-group">
+                    <select id="cluster_db_name" name="cluster_db_name" class="selectpicker show-tick form-control bs-select-hidden" data-name="要上线的目标数据库" data-placeholder="要上线的目标数据库:" required>
+                        <option value="is-empty" disabled="" selected="selected">要上线的目标数据库:</option>
+                        {% for db in dbs %}
+                            <option value="{{ db.cluster_name }}->{{ db.db_name }}">{{ db.cluster_name }}->{{ db.db_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="backup" name="backup" class="selectpicker show-tick form-control bs-select-hidden" data-name="是否选择备份" data-placeholder="请选择是否要备份:" required>
+                        <option value="is-empty" disabled="" selected="selected">请选择是否要备份:</option>
+                        <option value="1">是</option>
+                        <option value="0">否</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <!--
+                    <select id="review_man" name="review_man" class="selectpicker show-tick form-control bs-select-hidden" data-name="审核人" data-placeholder="请选择审核人:" required>
                         <option value="is-empty" disabled="" selected="selected">请选择审核人:</option>
-                        {% for man in reviewMen %}
-                        <option value="{{man}}">{{man}}</option>
+                    </select>
+                    -->
+                    <select class="chosen-select chosen-transparent form-control" data-placeholder="请选择审核人" multiple="请选择审核人" name="reviewer" id="reviewer" parsley-trigger="change" parsley-required="true" parsley-error-container="#reviewer">
+                        {% for dba in dbas %}
+                        <option value="{{ dba.email }}">{{ dba.username }}</option>
                         {% endfor %}
-                        </select>
-                        <select class="chosen-select chosen-transparent form-control" data-placeholder="请选择审核人" multiple="请选择审核人" name="reviewer" id="reviewer" parsley-trigger="change" parsley-required="true" parsley-error-container="#reviewer">
-                        {% for user in userlist %}
-                            <option value="{{ user.email }}">{{ user.username }}</option>
-                        {% endfor %}
-                        </select>
-                    </div>
+                    </select>
+                </div>
             </div>
             <div class="col-md-4" style="position:absolute; bottom: 0; right: 0;">
-                    <div class="form-group " >
-                        <input type="button" id="btn-autoreview" class="btn btn-info" value="SQL检测" />
-                        <button type="reset" class="btn btn-warning">清空选项</button>
-                        <!-- <button type="submit" class="btn btn-primary">SQL提交</button> -->
-                        <input id="btn-submitsql" type="button" class="btn btn-primary" value="SQL提交" />
-                    </div>
+
+                <div class="form-group " >
+                    <input type="button" id="btn-autoreview" class="btn btn-info" value="SQL检测" />
+                    <!-- <button type="submit" class="btn btn-primary">SQL提交</button> -->
+                    <input id="btn-submitsql" type="submit" class="btn btn-primary" value="SQL提交" />
+                    <button type="reset" class="btn btn-warning">清空选项</button>
+                </div>
+
             </div>
         </form>
         </div>
@@ -73,4 +68,12 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function(){
+            $(".chosen-select").chosen({disable_search_threshold: 8});
+        })
+    </script>
 {% endblock %}

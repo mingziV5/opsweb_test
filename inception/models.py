@@ -14,8 +14,13 @@ class MasterConfig(models.Model):
         link_name = self.cluster_name + '_' + self.db_name
         return link_name
 
+    class Meta:
+        #联合唯一索引
+        unique_together = ('cluster_name', 'db_name')
+
 class SqlWorkflowStatus(models.Model):
     status_name = models.CharField('工单状态', max_length=50)
+    status_code = models.CharField('工单状态代码', max_length=10)
 
 class SqlWorkflow(models.Model):
     workflow_name = models.CharField('sql工单名称', max_length=100)
@@ -26,10 +31,10 @@ class SqlWorkflow(models.Model):
     finish_time = models.DateTimeField('结束时间', null=True, blank=True)
     status = models.ForeignKey(SqlWorkflowStatus)
     backup = models.CharField('是否备份', choices=((0, '否'),(1, '是')), max_length=10)
-    review_content = models.TextField('自动审核返回的JSON')
+    review_content = models.TextField('自动审核返回的JSON', null=True)
     cluster_db_name = models.CharField('执行目标库', max_length=200)
     sql_content = models.TextField('具体执行内容')
-    excute_result = models.TextField('执行结果返回的JSON')
+    excute_result = models.TextField('执行结果返回的JSON', null=True)
 
     def __str__(self):
         return self.workflow_name

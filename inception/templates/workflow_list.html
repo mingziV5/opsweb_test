@@ -6,26 +6,50 @@
 {% endblock %}
 
 {% block body %}
-        <ul class="nav nav-tabs">
-            <li>
-                 <a href="#">全部工单</a>
-            </li>
-            <li>
-                 <a href="#">待审核的</a>
-            </li>
-            <li>
-                 <a href="#">执行中</a>
-            </li>
-            <li>
-                 <a href="#">已执行完毕</a>
-            </li>
-            <li>
-                 <a href="#">人工终止流程</a>
-            </li>
-            <li>
-                 <a href="#">自动审核不通过</a>
-            </li>
-        </ul>
+    <ul class="nav nav-tabs">
+        {% if status == 'all' or not status %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=all">全部工单</a>
+        </li>
+        {% if status == 'wait' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=wait">待审核的</a>
+        </li>
+        {% if status == 'excute' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=excute">执行中</a>
+        </li>
+        {% if status == 'done' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=done">已执行完毕</a>
+        </li>
+        {% if status == 'stop' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=stop">人工终止流程</a>
+        </li>
+        {% if status == 'reject' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=reject">自动审核不通过</a>
+        </li>
+    </ul>
 
     <div class="tile-body color transparent-black rounded-corners">
         <div class="table-responsive">
@@ -66,30 +90,26 @@
 
     <div class="tile-footer text-center">
 
-        <ul class="pagination pagination-sm nomargin pagination-custom">
+        <ul class='pagination center-block'>
+            <li><a href="{% url 'user_list' %}?page=1">首页</a></li>
             {% if page_obj.has_previous %}
-                <li>
-                    <a href="?page={{ page_obj.previous_page_number }}{{ uri }}"><i class="fa fa-angle-double-left"></i></a>
-                </li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
             {% else %}
-                <li class="disabled">
-                    <a href="#"><i class="fa fa-angle-double-left"></i></a>
-                </li>
+            <li><a>上一页</a></li>
             {% endif %}
-
-            {% for page in paginator.page_range %}
-                <li {% if page_obj.number == page %}class="active"{% endif %}><a href="?page={{ page }}{{ uri }}" >{{ page }}</a></li>
+            {% for p in page_range_obj %}
+                {% if p == page_obj.number %}
+                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
+                {% else %}
+                <li><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
+                {% endif %}
             {% endfor %}
-
             {% if page_obj.has_next %}
-                <li>
-                    <a href="?page={{ page_obj.next_page_number }}{{ uri }}"><i class="fa fa-angle-double-right"></i></a>
-                </li>
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
             {% else %}
-                <li class="disabled">
-                <a href="#"><i class="fa fa-angle-double-right"></i></a>
-                </li>
+            <li><a>下一页</a></li>
             {% endif %}
+            <li><a href="{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
         </ul>
     </div>
 

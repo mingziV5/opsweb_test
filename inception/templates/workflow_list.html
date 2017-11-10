@@ -67,7 +67,6 @@
 
                 </thead>
                 <tbody>
-
                     {% for workflow in object_list %}
                         <tr class="gradeA">
                             <td> {{ forloop.counter }} </td>
@@ -77,11 +76,10 @@
                             <td> {{ workflow.create_time|date:"Y-m-d H:i:s" }} </td>
                             <td> {{ workflow.cluster_db_name }} </td>
                             <td>
-                                <a type="button" class="btn btn-success btn-sm" href="#">详情操作</a>
+                                <a type="button" class="btn btn-success btn-sm" href="{% url 'inception_workflow_detail' %}?id={{ workflow.id }}">详情操作</a>
                             </td>
                         </tr>
                     {% endfor %}
-
                 </tbody>
             </table>
         </div>
@@ -91,25 +89,25 @@
     <div class="tile-footer text-center">
 
         <ul class='pagination center-block'>
-            <li><a href="{% url 'user_list' %}?page=1">首页</a></li>
+            <li><a href="{% url 'inception_workflow_list' %}?page=1">首页</a></li>
             {% if page_obj.has_previous %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
+            <li><a href="{% url 'inception_workflow_list' %}?page={{ page_obj.previous_page_number }}{{ search_data }}" >上一页</a></li>
             {% else %}
             <li><a>上一页</a></li>
             {% endif %}
             {% for p in page_range_obj %}
                 {% if p == page_obj.number %}
-                <li class='active'><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
+                <li class='active'><a href="{% url 'inception_workflow_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% else %}
-                <li><a href="{% url 'user_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
+                <li><a href="{% url 'inception_workflow_list' %}?page={{ p }}{{ search_data }}">{{ p }}</a></li>
                 {% endif %}
             {% endfor %}
             {% if page_obj.has_next %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
+            <li><a href="{% url 'inception_workflow_list' %}?page={{ page_obj.next_page_number }}{{ search_data }}">下一页</a></li>
             {% else %}
             <li><a>下一页</a></li>
             {% endif %}
-            <li><a href="{% url 'user_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
+            <li><a href="{% url 'inception_workflow_list' %}?page={{ page_obj.paginator.num_pages }}">末页</a></li>
         </ul>
     </div>
 

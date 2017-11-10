@@ -43,13 +43,13 @@
         <tbody>
             <tr class="success">
                 <td>
-                    {{workflowDetail.engineer}}
+                    {{workflowDetail.proposer}}
                 </td>
                 <td>
-                    {{listAllReviewMen.0}} {{listAllReviewMen.1}}
+                    {{workflowDetail.reviewer}}
                 </td>
                 <td>
-                    {{workflowDetail.cluster_name}}
+                    {{workflowDetail.cluster_db_name}}
                 </td>
                 <td>
                     {{workflowDetail.create_time|date:"Y-m-d H:i:s"}}
@@ -58,15 +58,15 @@
                     {{workflowDetail.finish_time|date:"Y-m-d H:i:s"}}
                 </td>
                 <td>
-                    {{workflowDetail.is_backup}}
+                    {{workflowDetail.backup}}
                 </td>
                 <td>
-                    {% if workflowDetail.status == "已正常结束" %}
+                    {% if workflowDetail.status == "done" %}
                         <font color="green">
                     {% else %}
                         <font color="red">
                     {% endif %}
-                        <B id="workflowDetail_status">{{workflowDetail.status}}</B></font>
+                        <B id="workflowDetail_status">{{workflowDetail.status.status_name}}</B></font>
                 </td>
             </tr>
 
@@ -122,7 +122,7 @@
                     {{row.9}}
                 </td>
                 <td id="td_{{forloop.counter}}">
-                    {% if workflowDetail.status == "执行中" %}
+                    {% if workflowDetail.status.status_name == "excute" %}
                     <div>
                         <div class="progress" style="width: 80%; height: 18px; float: left;">
                             <div id="div_{{forloop.counter}}" class="progress-bar" role="progressbar" aria-valuenow="60"
@@ -152,7 +152,7 @@
 
         </tbody>
     </table>
-    {% if workflowDetail.status == '等待审核人审核' %}
+    {% if workflowDetail.status.status_name == 'wait' %}
     {% if loginUser in listAllReviewMen %}
     <form action="/execute/" method="post" style="display:inline-block;">
         {% csrf_token %}
@@ -166,13 +166,13 @@
         <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
         <input type="submit" id="btnCancel" type="button" onclick="execute()" class="btn btn-default" data-loading-text="Loading..." value="终止流程" />
     </form>
-    {% elif workflowDetail.status == '已正常结束' and workflowDetail.is_backup == '是' %}
+    {% elif workflowDetail.status == 'done' and workflowDetail.backup == '1' %}
     <form action="/rollback/" method="get" style="display:inline-block;">
         {% csrf_token %}
         <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
         <input type="submit" id="btnRollback" type="button" class="btn btn-default" data-loading-text="Loading..." value="查看回滚SQL" />
     </form>
-    {% elif workflowDetail.status == '自动审核不通过' or workflowDetail.status == '人工终止流程' or workflowDetail.status == '执行有异常' %}
+    {% elif workflowDetail.status == 'reject' or workflowDetail.status == 'stop' or workflowDetail.status == 'exception' %}
         {% if workflowDetail.engineer == loginUser %}
         <!--只允许发起人修改工单-->
             {% csrf_token %}

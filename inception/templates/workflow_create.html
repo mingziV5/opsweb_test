@@ -11,17 +11,17 @@
 
         <form id="form-submitsql" action="#" method="post" class="form-horizontal" role="form">
             {% csrf_token %}
-            <input type="hidden" id="workflowid" name="workflowid"/>
+            <!--<input type="hidden" id="workflowid" name="workflowid"/>-->
             <div class="col-md-8 column">
                 <textarea id="sql_content" name="sql_content" class="form-control" data-name="SQL内容" placeholder="请在此提交SQL，请以分号结尾。例如：use test; create table t1(id int)engine=innodb;" rows=30 required></textarea>
             </div>
 
             <div class="col-md-4 column" >
                     <div class="form-group">
-                        <input id="workflow_name" type="text" name="workflow_name" class="form-control" data-name="上线单名称" placeholder="请输入上线单名称，如:XX项目会员功能建表" required>
+                        <input id="workflow_name" type="text" name="workflow_name" class="form-control" data-name="上线单名称" placeholder="请输入上线单名称" required>
                     </div>
                     <div class="form-group">
-                        <select id="cluster_name" name="cluster_name" class="selectpicker show-tick form-control bs-select-hidden" data-name="要上线的集群" data-placeholder="请选择要上线的集群:" required>
+                        <select id="cluster_db_name" name="cluster_db_name" class="selectpicker show-tick form-control bs-select-hidden" data-name="要上线的目标数据库" data-placeholder="要上线的目标数据库:" required>
                             <option value="is-empty" disabled="" selected="selected">请选择要上线的集群:</option>
                             {% for cluster_name,dbs in dictAllClusterDb.items %}
                                 <option value="{{cluster_name}}">{{cluster_name}}集群 (包含db：
@@ -35,7 +35,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <select id="is_backup" name="is_backup" class="selectpicker show-tick form-control bs-select-hidden" data-name="是否选择备份" data-placeholder="请选择是否要备份:" required>
+                        <select id="backup" name="backup" class="selectpicker show-tick form-control bs-select-hidden" data-name="是否选择备份" data-placeholder="请选择是否要备份:" required>
                             <option value="is-empty" disabled="" selected="selected">请选择是否要备份:</option>
                             <option value="1">是</option>
                             <option value="0">否</option>
@@ -46,6 +46,11 @@
                         <option value="is-empty" disabled="" selected="selected">请选择审核人:</option>
                         {% for man in reviewMen %}
                         <option value="{{man}}">{{man}}</option>
+                        {% endfor %}
+                        </select>
+                        <select class="chosen-select chosen-transparent form-control" data-placeholder="请选择审核人" multiple="请选择审核人" name="reviewer" id="reviewer" parsley-trigger="change" parsley-required="true" parsley-error-container="#reviewer">
+                        {% for user in userlist %}
+                            <option value="{{ user.email }}">{{ user.username }}</option>
                         {% endfor %}
                         </select>
                     </div>

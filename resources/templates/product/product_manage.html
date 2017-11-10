@@ -24,12 +24,12 @@
 {% block breadcrumb %}
     <li><i class="fa fa-home fa-fw"></i><a href="/">资源</a><span class="divider"></span></li>
     <li><i class="fa fa-home fa-fw"></i><a href="/product/manage/">业务线管理</a><span class="divider"></span></li>
-    <a href="{% url 'product_add' %}" class="btn btn-primary btn-sm header-btn">增加业务线</a>
+
 {% endblock %}
 
 
 {% block body %}
-
+    <a href="{% url 'product_add' %}" class="btn btn-primary btn-sm header-btn">增加业务线</a>
     <div id="content-body">
 
         <div class="col-xs-3">

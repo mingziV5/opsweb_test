@@ -62,7 +62,8 @@ class CreateWorkflowView(TemplateView):
         context = super(CreateWorkflowView, self).get_context_data(**kwargs)
         context['dbs'] = MasterConfig.objects.values('cluster_name', 'db_name')
         dba_group = Group.objects.get(name='dba')
-        context['dbas'] = dba_group.user_set.all()
+        login_user = self.request.user
+        context['dbas'] = dba_group.user_set.all().exclude(username=login_user.username)
         return context
 
     def post(self, request):

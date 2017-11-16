@@ -81,7 +81,6 @@ class InceptionDao(object):
         result = None
         conn = None
         cur = None
-
         try:
             conn=pymysql.connect(host=paramHost, user=paramUser, passwd=paramPasswd, db=paramDb, port=paramPort, charset='utf8mb4')
             cur=conn.cursor()
@@ -89,6 +88,7 @@ class InceptionDao(object):
             result=cur.fetchall()
         except pymysql.Error as e:
             print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
+            GetLogger().get_logger().error("Mysql Error %d: %s" % (e.args[0], e.args[1]))
         finally:
             if cur is not None:
                 cur.close()
@@ -106,10 +106,10 @@ class InceptionDao(object):
         critical_sql_count = 0
         for row in sql_content.rstrip(';').split(';'):
             if re.match(r"([\s\S]*)drop(\s+)database(\s+.*)|([\s\S]*)drop(\s+)table(\s+.*)|([\s\S]*)truncate(\s+)partition(\s+.*)|([\s\S]*)truncate(\s+)table(\s+.*)", row.lower()):
-                result = ('', '', 2, '高危SQL', '不能包含【DROP DATABASE】|【DROP TABLE】|【TRUNCATE PARTITION】|【TRUNCATE TABLE】关键字！',
-                          row,'', '', '', '')
+                result = ('', 'CHECKED', 2, '高危SQL', '不能包含 DROP DATABASE | DROP TABLE | TRUNCATE PARTITION | TRUNCATE TABLE 关键字',
+                          row, '', '', 'None', '0', '')
             else:
-                result = ('', '', 0, '', 'None', row, '', '', '', '')
+                result = ('', 'CHECKED', 0, 'None', 'Audit completed', row, '', '', 'None', '0', '')
             result_list.append(result)
         if critical_sql_count == 1:
             return result_list
@@ -126,10 +126,10 @@ class InceptionDao(object):
         syntax_error_sql_found = 0
         for row in sql_content.rstrip(';').split(';'):
             if re.match(r"(\s*)alter(\s+)table(\s+)(\S+)(\s*);|(\s*)alter(\s+)table(\s+)(\S+)\.(\S+)(\s*);",row.lower() + ";"):
-                result = ('', '', 2, 'SQL语法错误', 'ALTER TABLE 必须带有选项', row, '', '', '', '')
+                result = ('', 'CHECKED', 2, 'SQL语法错误', 'ALTER TABLE 必须带有选项', row, '', '', 'None', '0', '')
                 syntax_error_sql_found = 1
             else:
-                result = ('', '', 0, 'None', row, '', '', '', '')
+                result = ('', 'CHECKED', 0, 'None', 'Audit completed', row, '', '', 'None', '0', '')
             result_list.append(result)
         if syntax_error_sql_found == 1:
             return result_list
@@ -144,7 +144,22 @@ class InceptionDao(object):
         :param sql_content: sql文本
         :param db_name: localhost->test
         :param is_split:
-        :return:
+        :return:  (
+                 (ID: sql序号,
+                 stage: 当前语句进行到哪一步:CHECKED、EXECUTED、RERUN、NONE，NONE,
+                 errlevel: 0 正常; 1 警告; 2 严重错误,
+                 stagestatus: 检查执行过程是成功还是失败,
+                 errormessage: 出错错误信息，
+                 SQL: 执行哪条sql,
+                 affected_rows: sql执行影响的行数,
+                 sequence: 回滚序列号,
+                 backup_dbname: 备份库的信息,
+                 execute_time: 执行时间,
+                 SQLSHA1: OSC功能
+                 )
+                 (1,'CHECKED',0,'Audit completed','None','use django',0,"'0_0_0'",'None','0',''),
+                 (2,'CHECKED',1,'Audit completed',"Identifier 'name' is keyword in MySQL.","insert into auth_group (name) values ('inception')",1,"'0_0_1'",'127_0_0_1_3306_django','0','')
+                 )
         '''
         cluster_name, db_name = cluster_db_name.split('->')
         master_db = MasterConfig.objects.get(Q(cluster_name=cluster_name) and Q(db_name=db_name))
@@ -175,24 +190,29 @@ class InceptionDao(object):
                                       inception_magic_commit;" %(master_user, master_password, master_host, str(master_port), sql_content)
                     sql_result = self._fetchall(sql_inception, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
                     tmp_list = []
+                    if sql_result is None or len(sql_result):
+                        result = ('', 'CHECKED', 2, 'SQL语法错误', '未知语法错误，inception奔溃', '', '', '', 'None', '0', '')
+                        return result
                     for row in sql_result:
                         sql_split = row[1]
                         sql = "/*--user=%s; --password=%s; --host=%s; --port=%s; --enable-check; --enable-ignore-warnings;*/\
                                 inception_magic_start;\
                                 %s\
                                 inception_magic_commit;" %(master_user, master_password, master_host, str(master_port), sql_split)
-                        split_sql_result = self._fetchall(sql, paramHost=self.inception_hostm, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
+                        split_sql_result = self._fetchall(sql, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
                         tmp_list.append(split_sql_result)
 
                     final_list = []
+                    #去掉外层list
                     for row in tmp_list:
                         for sql_row in row:
-                            final_list.append(list(sql_row))
-                    result = final_list
+                            final_list.append(tuple(sql_row))
+                    result = tuple(final_list)
                 else:
                     sql_inception =  "/*--user=%s; --password=%s; --host=%s; --port=%s; --enable-check; --enable-ignore-warnings;*/\
                                       inception_magic_start;\
                                       %s\
                                       inception_magic_commit;" % (master_user, master_password, master_host, str(master_port), sql_content)
                     result = self._fetchall(sql_inception, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
+
         return result

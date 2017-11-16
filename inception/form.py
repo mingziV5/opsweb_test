@@ -13,7 +13,7 @@ class AddSqlWorkflow(forms.Form):
         return ','.join(reviewer)
 
     def clean_sql_content(self):
-        sql_content = self.cleaned_data['sql_content']
+        sql_content = self.cleaned_data['sql_content'].rstrip()
         if sql_content[-1] != ';':
             raise forms.ValidationError('sql 语句没有用；结尾')
         return sql_content

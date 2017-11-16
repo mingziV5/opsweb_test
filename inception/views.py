@@ -4,7 +4,9 @@ from .models import SqlWorkflow, MasterConfig, SqlWorkflowStatus
 from django.contrib.auth.models import Group
 from .form import AddSqlWorkflow
 from opsweb.utils import GetLogger
-import traceback
+from inception import inception
+from inception.const import Const
+import traceback, json, re
 
 class ListWorkflowView(ListView):
     template_name = 'workflow_list.html'
@@ -76,6 +78,29 @@ class CreateWorkflowView(TemplateView):
             backup = workflow_form_dict.get('backup')
             cluster_db_name = workflow_form_dict.get('cluster_db_name')
             sql_content = workflow_form_dict.get('sql_content')
+            workflow_status = Const.workflow_status['reviewing']
+            #审核提交的sql
+            inception_obj = inception.InceptionDao()
+            sql_result = inception_obj.sql_auto_review(sql_content=sql_content, cluster_db_name=cluster_db_name, is_split=True)
+            if sql_result is None or len(sql_result) == 0:
+                response['status'] = 1
+                response['errmsg'] = 'inception返回结果为空，可能有语法错误'
+                return JsonResponse(response)
+            review_content = json.dumps(sql_result)
+            #遍历结果sql_result判断自动审核是否通过,决定工单的状态
+            flag = True
+            for sql_row in sql_result:
+                if sql_row[2] == 2:
+                    flag = False
+                    workflow_status = Const.workflow_status['reject']
+                    break
+                elif re.match(r"\w*comments\w*", sql_row[4]):
+                    flag = False
+                    workflow_status = Const.workflow_status['reject']
+            if flag:
+                workflow_status = Const.workflow_status['wait']
+
+
             try:
                 proposer = request.user.email
             except:
@@ -84,14 +109,14 @@ class CreateWorkflowView(TemplateView):
                 response['errmsg'] = '登录用户身份错误'
                 return JsonResponse(response)
             try:
-                status = SqlWorkflowStatus.objects.get(status_name='待审核')
+                status = SqlWorkflowStatus.objects.get(status_name=workflow_status)
             except:
                 GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '获取工单初始状态出错'
             try:
                 sql_obj = SqlWorkflow(workflow_name=workflow_name, reviewer=reviewer, backup=backup, cluster_db_name=cluster_db_name, sql_content=sql_content,
-                                      proposer=proposer, status=status)
+                                      review_content=review_content, proposer=proposer, status=status)
                 sql_obj.save()
                 response['status'] = 0
                 return JsonResponse(response)

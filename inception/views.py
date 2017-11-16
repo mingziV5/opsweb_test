@@ -76,12 +76,14 @@ class CreateWorkflowView(TemplateView):
             workflow_name = workflow_form_dict.get('workflow_name')
             reviewer = workflow_form_dict.get('reviewer')
             backup = workflow_form_dict.get('backup')
+            is_split = workflow_form_dict.get('is_split')
+            is_split_flag = True if is_split=='1' else False
             cluster_db_name = workflow_form_dict.get('cluster_db_name')
             sql_content = workflow_form_dict.get('sql_content')
             workflow_status = Const.workflow_status['reviewing']
             #审核提交的sql
             inception_obj = inception.InceptionDao()
-            sql_result = inception_obj.sql_auto_review(sql_content=sql_content, cluster_db_name=cluster_db_name, is_split=True)
+            sql_result = inception_obj.sql_auto_review(sql_content=sql_content, cluster_db_name=cluster_db_name, is_split=is_split_flag)
             if sql_result is None or len(sql_result) == 0:
                 response['status'] = 1
                 response['errmsg'] = 'inception返回结果为空，可能有语法错误'
@@ -89,14 +91,27 @@ class CreateWorkflowView(TemplateView):
             review_content = json.dumps(sql_result)
             #遍历结果sql_result判断自动审核是否通过,决定工单的状态
             flag = True
+            print(sql_result)
             for sql_row in sql_result:
-                if sql_row[2] == 2:
-                    flag = False
-                    workflow_status = Const.workflow_status['reject']
+                if isinstance(sql_row, tuple):
+                    if sql_row[2] == 2:
+                        flag = False
+                        workflow_status = Const.workflow_status['reject']
+                        break
+                    elif re.match(r"\w*comments\w*", sql_row[4]):
+                        flag = False
+                        workflow_status = Const.workflow_status['reject']
+                else:
+                    if sql_result[2] == 2:
+                        flag = False
+                        workflow_status = Const.workflow_status['reject']
+                        break
+                    elif re.match(r"\w*comments\w*", sql_result[4]):
+                        flag = False
+                        workflow_status = Const.workflow_status['reject']
+                        break
                     break
-                elif re.match(r"\w*comments\w*", sql_row[4]):
-                    flag = False
-                    workflow_status = Const.workflow_status['reject']
+
             if flag:
                 workflow_status = Const.workflow_status['wait']
 
@@ -115,7 +130,7 @@ class CreateWorkflowView(TemplateView):
                 response['status'] = 1
                 response['errmsg'] = '获取工单初始状态出错'
             try:
-                sql_obj = SqlWorkflow(workflow_name=workflow_name, reviewer=reviewer, backup=backup, cluster_db_name=cluster_db_name, sql_content=sql_content,
+                sql_obj = SqlWorkflow(workflow_name=workflow_name, reviewer=reviewer, backup=backup, is_split=is_split,cluster_db_name=cluster_db_name, sql_content=sql_content,
                                       review_content=review_content, proposer=proposer, status=status)
                 sql_obj.save()
                 response['status'] = 0

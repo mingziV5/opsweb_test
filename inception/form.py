@@ -7,6 +7,7 @@ class AddSqlWorkflow(forms.Form):
     backup = forms.CharField(required=True)
     cluster_db_name = forms.CharField(required=True)
     sql_content = forms.CharField(required=True)
+    is_split = forms.CharField(required=True)
 
     def clean_reviewer(self):
         reviewer = self.cleaned_data['reviewer']

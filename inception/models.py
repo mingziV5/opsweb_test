@@ -31,6 +31,7 @@ class SqlWorkflow(models.Model):
     finish_time = models.DateTimeField('结束时间', null=True, blank=True)
     status = models.ForeignKey(SqlWorkflowStatus)
     backup = models.CharField('是否备份', choices=((0, '否'),(1, '是')), max_length=10)
+    is_split = models.CharField('是否切分sql', choices=((0, '否'),(1, '是')), max_length=10, default=0)
     review_content = models.TextField('自动审核返回的JSON', null=True)
     cluster_db_name = models.CharField('执行目标库', max_length=200)
     sql_content = models.TextField('具体执行内容')

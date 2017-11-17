@@ -190,8 +190,8 @@ class InceptionDao(object):
                                       inception_magic_commit;" %(master_user, master_password, master_host, str(master_port), sql_content)
                     sql_result = self._fetchall(sql_inception, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
                     tmp_list = []
-                    if sql_result is None or len(sql_result):
-                        result = ('', 'CHECKED', 2, 'SQL语法错误', '未知语法错误，inception奔溃', '', '', '', 'None', '0', '')
+                    if sql_result is None or len(sql_result) == 0:
+                        result = (('', 'CHECKED', 2, 'SQL语法错误', '未知语法错误，inception奔溃', '', '', '', 'None', '0', ''))
                         return result
                     for row in sql_result:
                         sql_split = row[1]

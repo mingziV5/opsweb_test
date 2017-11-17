@@ -114,14 +114,10 @@
                     {{forloop.counter}}
                 </td>
                <td style='word-wrap:break-word;'>
-                    {% for sql in row.5 %}
-                        {{ sql }}{% if not forloop.last %}<br/>{% endif %}
-                    {% endfor %}
+                   {{ row.5 }}{% if not forloop.last %}<br/>{% endif %}
                 </td>
                 <td style='word-wrap:break-word;'>
-                    {% for statement in row.4 %}
-                        {{ statement }}{% if not forloop.last %}<br/>{% endif %}
-                    {% endfor %}
+                    {{ row.4 }}{% if not forloop.last %}<br/>{% endif %}
                 </td>
                 <td>
                     {{row.6}}

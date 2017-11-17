@@ -63,6 +63,11 @@ class WorkflowDetailView(TemplateView):
                 context['workflowDetail'] = sql_wf_obj
             except:
                 return 'error'
+        if sql_wf_obj.status.status_code in ('done', 'exception'):
+            listContent = json.loads(sql_wf_obj.excute_result)
+        else:
+            listContent = json.loads(sql_wf_obj.review_content)
+        context['listContent'] = listContent
         return context
 
 class CreateWorkflowView(TemplateView):
@@ -99,7 +104,6 @@ class CreateWorkflowView(TemplateView):
             review_content = json.dumps(sql_result)
             #遍历结果sql_result判断自动审核是否通过,决定工单的状态
             flag = True
-            print(sql_result)
             for sql_row in sql_result:
                 if isinstance(sql_row, tuple):
                     if sql_row[2] == 2:
@@ -122,8 +126,6 @@ class CreateWorkflowView(TemplateView):
 
             if flag:
                 workflow_status = Const.workflow_status['wait']
-
-
             try:
                 proposer = request.user.email
             except:

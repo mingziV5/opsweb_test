@@ -2,6 +2,7 @@ from django.views.generic import ListView, TemplateView
 from django.http import JsonResponse
 from .models import SqlWorkflow, MasterConfig, SqlWorkflowStatus
 from django.contrib.auth.models import Group
+from django.shortcuts import redirect, reverse
 from .form import AddSqlWorkflow
 from opsweb.utils import GetLogger
 from inception import inception
@@ -55,6 +56,13 @@ class WorkflowDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(WorkflowDetailView, self).get_context_data()
+        workflow_id = self.request.GET.get('workflow_id', None)
+        if workflow_id:
+            try:
+                sql_wf_obj = SqlWorkflow.objects.get(id=workflow_id)
+                context['workflowDetail'] = sql_wf_obj
+            except:
+                return 'error'
         return context
 
 class CreateWorkflowView(TemplateView):

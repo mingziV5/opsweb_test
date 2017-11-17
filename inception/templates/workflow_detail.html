@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body %}
-    <h4>工单名称：<span id="editWorkflowNname"></span></h4>
+    <h4>工单名称：<span id="editWorkflowNname">{{ workflowDetail.workflow_name }}</span></h4>
     <input type="hidden" id="workflowDetail_id" name="workflowid" value="">
     <input type="hidden" id="editSqlContent" value=""/>
     <input type="hidden" id="editClustername" value=""/>
@@ -38,6 +38,9 @@
                     是否备份
                 </th>
                 <th>
+                    是否分割
+                </th>
+                <th>
                     当前状态
                 </th>
             </tr>
@@ -61,6 +64,9 @@
                 </td>
                 <td>
                     {{workflowDetail.backup}}
+                </td>
+                <td>
+                    {{workflowDetail.is_split}}
                 </td>
                 <td>
                     {% if workflowDetail.status == "done" %}

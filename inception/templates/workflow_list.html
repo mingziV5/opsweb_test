@@ -76,7 +76,7 @@
                             <td> {{ workflow.create_time|date:"Y-m-d H:i:s" }} </td>
                             <td> {{ workflow.cluster_db_name }} </td>
                             <td>
-                                <a type="button" class="btn btn-success btn-sm" href="{% url 'inception_workflow_detail' %}?id={{ workflow.id }}">详情操作</a>
+                                <a type="button" class="btn btn-success btn-sm" href="{% url 'inception_workflow_detail' %}?workflow_id={{ workflow.id }}">详情</a>
                             </td>
                         </tr>
                     {% endfor %}

@@ -87,7 +87,6 @@ class InceptionDao(object):
             ret=cur.execute(sql)
             result=cur.fetchall()
         except pymysql.Error as e:
-            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             GetLogger().get_logger().error("Mysql Error %d: %s" % (e.args[0], e.args[1]))
         finally:
             if cur is not None:
@@ -191,7 +190,7 @@ class InceptionDao(object):
                     sql_result = self._fetchall(sql_inception, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
                     tmp_list = []
                     if sql_result is None or len(sql_result) == 0:
-                        result = (('', 'CHECKED', 2, 'SQL语法错误', '未知语法错误，inception奔溃', '', '', '', 'None', '0', ''))
+                        result = (('', 'CHECKED', 2, 'SQL语法错误', '未知语法错误，inception奔溃', '', '', '', 'None', '0', ''), )
                         return result
                     for row in sql_result:
                         sql_split = row[1]

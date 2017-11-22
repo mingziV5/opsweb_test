@@ -1,9 +1,8 @@
 from django.views.generic import ListView, TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from .models import SqlWorkflow, MasterConfig, SqlWorkflowStatus
 from django.contrib.auth.models import Group
-from django.shortcuts import redirect, reverse
-from .form import AddSqlWorkflow
+from .form import AddSqlWorkflow, CheckWorkflow
 from opsweb.utils import GetLogger
 from inception import inception
 from inception.const import Const
@@ -72,6 +71,7 @@ class WorkflowDetailView(TemplateView):
 
 class CreateWorkflowView(TemplateView):
     template_name = 'workflow_create.html'
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace', 'check']
 
     def get_context_data(self, **kwargs):
         context = super(CreateWorkflowView, self).get_context_data(**kwargs)
@@ -80,6 +80,27 @@ class CreateWorkflowView(TemplateView):
         login_user = self.request.user
         context['dbas'] = dba_group.user_set.all().exclude(username=login_user.username)
         return context
+
+    def check(self, request):
+        response = {}
+        data = QueryDict(request.body)
+        checkflow_form = CheckWorkflow(data)
+        if checkflow_form.is_valid():
+            checkflow_form_dict = checkflow_form.cleaned_data
+            sql_content = checkflow_form_dict.get('sql_content')
+            cluster_db_name = checkflow_form_dict.get('cluster_db_name')
+            is_split = checkflow_form_dict.get('is_split')
+            is_split_flag = True if is_split=='1' else False
+            #提交测试sql
+            inception_obj = inception.InceptionDao()
+            sql_result = inception_obj.sql_auto_review(sql_content=sql_content, cluster_db_name=cluster_db_name, is_split=is_split_flag)
+            if sql_content is None or len(sql_result) == 0:
+                response['status'] = 1
+                response['errmsg'] = 'inception返回结果为空，可能语法错误'
+                return JsonResponse(response)
+            response['status'] = 0
+            response['data'] = json.dumps(sql_result)
+            return JsonResponse(response)
 
     def post(self, request):
         response = {}
@@ -150,7 +171,8 @@ class CreateWorkflowView(TemplateView):
                 response['status'] = 1
                 response['errmsg'] = '新建工单出错'
         response['status'] = 1
-        response['errmsg'] = '数据验证不通过'
+        response['errmsg'] = '数据验证不通过,是否;结尾'
         return JsonResponse(response)
+
 
 

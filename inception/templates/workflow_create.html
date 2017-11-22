@@ -60,9 +60,8 @@
             <div class="col-md-4" style="position:absolute; bottom: 0; right: 0;">
 
                 <div class="form-group " >
-                    <input type="button" id="btn-autoreview" class="btn btn-info" value="SQL检测" />
-                    <!-- <button type="submit" class="btn btn-primary">SQL提交</button> -->
-                    <input id="btn-submitsql" type="submit" class="btn btn-primary" value="SQL提交" />
+                    <input id="btn-autoreview" type="button" class="btn btn-info" value="SQL检测" />
+                    <input id="btn-submitsql" type="button" class="btn btn-primary" value="SQL提交" />
                     <button type="reset" class="btn btn-warning">清空选项</button>
                 </div>
 
@@ -84,5 +83,85 @@
         $(function(){
             $(".chosen-select").chosen({disable_search_threshold: 8});
         })
+
+        function validate() {
+            var result = true;
+            var sqlContent = $("#sql_content").val();
+            var clusterName = $("#cluster_db_name").val();
+            if (sqlContent == null || sqlContent.trim() === "" || sqlContent == $("#sql_content").attr("placeholder")) {
+                swal("sql 内容为空");
+                return result = false;
+            } else if (clusterName == null || clusterName == $("#cluster_db_name").attr("data-placeholder")) {
+                swal("选择执行的目标库");
+                return result = false;
+            }
+            return result;
+        }
+
+        //提交sql
+        $(function(){
+            $("#btn-submitsql").click(function(){
+                if (validate()) {
+                    var str=$("#form-submitsql").serialize()
+                    $.post("{% url 'inception_workflow_create' %}", str, function(res){
+                        if(res.status == 1){
+                            swal(res.errmsg)
+                        } else {
+                            window.location.href="{% url 'inception_workflow_list' %}"
+                        }
+                    })
+                }
+            })
+        })
+
+        //测试sql
+        $(function(){
+            $("#btn-autoreview").click(function(){
+                if (validate()) {
+                    var sqlContent = $("#sql_content").val()
+                    var clusterName = $("#cluster_db_name").val()
+                    var split = $("#is_split").val()
+                    if (validate()) {
+                        $.ajax({
+                            url: "{% url 'inception_workflow_create' %}",
+                            type: "check",
+                            data: {"sql_content": sqlContent, "cluster_db_name": clusterName, 'is_split': split},
+                            success: function(res){
+                                if (res.status == 1){
+                                    swal(res.errmsg)
+                                } else {
+                                    var finalHTML = "";
+                                    $.each(res.data, function(index, value){
+                                        console(value)
+                                        var sql = value[5]
+                                        var suggest = value[4]
+                                        var alertStyle = "alert-success";
+                                        if (suggest != "None") {
+                                            alertStyle = "alert-danger";
+                                        }
+                                        finalHtml += "<div class='alert alert-dismissable "
+                                            + alertStyle + "'> <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>x</button> <table class='' width='100%' style='table-layout:fixed;'> <tr> <td width='80%' style='word-wrap:break-word;'>"
+                                            + sql
+                                            + "</td> <td><strong>自动审核结果：</strong>"
+                                            + suggest
+                                            + "</td> </tr> </table> </div>";
+
+                                        $("#inception-result-col").html(finalHtml);
+                                        $("#inception-result").show();
+                                    })
+                                }
+                            },
+                            beforeSend: function (xhr, settings) {
+                                var csrftoken = getCookie('csrftoken');
+                                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                                }
+                            }
+                        })
+                    }
+                }
+            })
+        })
+
     </script>
 {% endblock %}

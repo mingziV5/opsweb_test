@@ -84,9 +84,10 @@ class CreateWorkflowView(TemplateView):
     def check(self, request):
         response = {}
         data = QueryDict(request.body)
-        checkflow_form = CheckWorkflow(data)
+        checkflow_form = CheckWorkflow(data.dict())
         if checkflow_form.is_valid():
             checkflow_form_dict = checkflow_form.cleaned_data
+            print(checkflow_form_dict)
             sql_content = checkflow_form_dict.get('sql_content')
             cluster_db_name = checkflow_form_dict.get('cluster_db_name')
             is_split = checkflow_form_dict.get('is_split')
@@ -101,6 +102,9 @@ class CreateWorkflowView(TemplateView):
             response['status'] = 0
             response['data'] = json.dumps(sql_result)
             return JsonResponse(response)
+        response['status'] = 1
+        response['errmsg'] = '数据审核不通过'
+        return JsonResponse(response)
 
     def post(self, request):
         response = {}

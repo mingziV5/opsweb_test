@@ -84,7 +84,7 @@ class CreateWorkflowView(TemplateView):
     def check(self, request):
         response = {}
         data = QueryDict(request.body)
-        checkflow_form = CheckWorkflow(data.dict())
+        checkflow_form = CheckWorkflow(data)
         if checkflow_form.is_valid():
             checkflow_form_dict = checkflow_form.cleaned_data
             print(checkflow_form_dict)
@@ -109,6 +109,7 @@ class CreateWorkflowView(TemplateView):
     def post(self, request):
         response = {}
         workflow_form = AddSqlWorkflow(request.POST)
+        print(request.POST)
         if workflow_form.is_valid():
             workflow_form_dict = workflow_form.cleaned_data
             workflow_name = workflow_form_dict.get('workflow_name')

@@ -20,9 +20,9 @@ class AddSqlWorkflow(forms.Form):
         return sql_content
 
 class CheckWorkflow(forms.Form):
-    cluster_name = forms.CharField(required=True)
+    cluster_db_name = forms.CharField(required=True)
     sql_content = forms.CharField(required=True)
-    is_spilt = forms.CharField(required=True)
+    is_split = forms.CharField(required=True)
 
     def clean_sql_content(self):
         sql_content = self.cleaned_data['sql_content'].rstrip()

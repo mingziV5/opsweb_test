@@ -131,24 +131,26 @@
                                     swal(res.errmsg)
                                 } else {
                                     var finalHTML = "";
-                                    $.each(res.data, function(index, value){
-                                        console(value)
-                                        var sql = value[5]
-                                        var suggest = value[4]
+                                    //直接用$.each遍历报错，需要将json对象转换成数组循环
+                                    var result =eval(res.data)
+                                    for (var i=0; i<result.length; i++) {
+                                    //$.each(res.data, function(index, value){
+                                        var sql = result[i][5]
+                                        var suggest = result[i][4]
                                         var alertStyle = "alert-success";
                                         if (suggest != "None") {
                                             alertStyle = "alert-danger";
                                         }
-                                        finalHtml += "<div class='alert alert-dismissable "
+                                        finalHTML += "<div class='alert alert-dismissable "
                                             + alertStyle + "'> <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>x</button> <table class='' width='100%' style='table-layout:fixed;'> <tr> <td width='80%' style='word-wrap:break-word;'>"
                                             + sql
                                             + "</td> <td><strong>自动审核结果：</strong>"
                                             + suggest
                                             + "</td> </tr> </table> </div>";
 
-                                        $("#inception-result-col").html(finalHtml);
+                                        $("#inception-result-col").html(finalHTML);
                                         $("#inception-result").show();
-                                    })
+                                    }
                                 }
                             },
                             beforeSend: function (xhr, settings) {

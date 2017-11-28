@@ -217,36 +217,39 @@ class InceptionDao(object):
 
         return result
 
-    def sql_execute(self, workflow_detail, dict_conn):
+    def sql_execute(self, workflow_detail, cluster_db_name):
         '''
-                将sql交给inception进行最终执行，并返回执行结果。
-                '''
+            将sql交给inception进行最终执行，并返回执行结果。
+        '''
+        #提取执行目标库参数
+        cluster_name, db_name = cluster_db_name.split('->')
+        master_db = MasterConfig.objects.get(Q(cluster_name=cluster_name) and Q(db_name=db_name))
+        master_host = master_db.master_host
+        master_port = master_db.master_port
+        master_user = master_db.master_user
+        master_password = master_db.master_passwd
+
         strBackup = ""
-        if workflow_detail.is_backup == '是':
+        if workflow_detail.backup == '1':
             strBackup = "--enable-remote-backup;"
         else:
             strBackup = "--disable-remote-backup;"
 
         # 根据inception的要求，执行之前最好先split一下
-        sqlSplit = "/*--user=%s; --password=%s; --host=%s; --enable-execute;--port=%s; --enable-ignore-warnings;--enable-split;*/\
+        sqlSplit = "/*--user=%s; --password=%s; --host=%s; --enable-execute;--port=%s; --enable-ignore-warnings; --enable-split;*/\
                      inception_magic_start;\
                      %s\
-                     inception_magic_commit;" % (
-        dict_conn['masterUser'], dict_conn['masterPassword'], dict_conn['masterHost'], str(dict_conn['masterPort']),
-        workflow_detail.sql_content)
+                     inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),workflow_detail.sql_content)
         splitResult = self._fetchall(sqlSplit, self.inception_host, self.inception_port, '', '', '')
 
         tmpList = []
         # 对于split好的结果，再次交给inception执行.这里无需保持在长连接里执行，短连接即可.
         for splitRow in splitResult:
             sqlTmp = splitRow[1]
-            sqlExecute = "/*--user=%s;--password=%s;--host=%s;--enable-execute;--port=%s; --enable-ignore-warnings;%s*/\
+            sqlExecute = "/*--user=%s;--password=%s;--host=%s;--enable-execute;--port=%s; --enable-ignore-warnings; %s*/\
                             inception_magic_start;\
                             %s\
-                            inception_magic_commit;" % (
-            dict_conn['masterUser'], dict_conn['masterPassword'], dict_conn['masterHost'], str(dict_conn['masterPort']),
-            strBackup, sqlTmp)
-
+                            inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),strBackup, sqlTmp)
             executeResult = self._fetchall(sqlExecute, self.inception_host, self.inception_port, '', '', '')
             for sqlRow in executeResult:
                 tmpList.append(sqlRow)

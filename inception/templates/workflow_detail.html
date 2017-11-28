@@ -139,10 +139,10 @@
                             <form  method="post" >
                                 {% csrf_token %}
                                 <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
-                                <!--<input type="hidden" id="sqlID_{{row.0}}" value="{{row.0}}">-->
+                                <input type="hidden" id="sqlID_{{row.0}}" value="{{row.0}}">
                                 <button id="btnstop_{{forloop.counter}}" value="{{forloop.counter}}" type="button" class="close" style="display: none" title="停止pt-OSC进程">
-                                 <span aria-hidden="true">&times;</span>
-                                 <span class="sr-only"></span>
+                                    <span aria-hidden="true">&times;</span>
+                                    <span class="sr-only"></span>
                                 </button>
                             </form>
                         </div>
@@ -156,28 +156,36 @@
 
         </tbody>
     </table>
-    {% if workflowDetail.status.status_name == 'wait' %}
-    {% if loginUser in listAllReviewMen %}
-    <form action="/execute/" method="post" style="display:inline-block;">
-        {% csrf_token %}
-        <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
-        <input type="submit" id="btnExecute" type="button" onclick="execute()" class="btn btn-primary btn-default" data-loading-text="Loading..." value="审核通过，执行" />
-    </form>
-    {% endif %}
-
-    <form action="/cancel/" method="post" style="display:inline-block;">
-        {% csrf_token %}
-        <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
-        <input type="submit" id="btnCancel" type="button" onclick="execute()" class="btn btn-default" data-loading-text="Loading..." value="终止流程" />
-    </form>
-    {% elif workflowDetail.status == 'done' and workflowDetail.backup == '1' %}
-    <form action="/rollback/" method="get" style="display:inline-block;">
-        {% csrf_token %}
-        <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
-        <input type="submit" id="btnRollback" type="button" class="btn btn-default" data-loading-text="Loading..." value="查看回滚SQL" />
-    </form>
-    {% elif workflowDetail.status == 'reject' or workflowDetail.status == 'stop' or workflowDetail.status == 'exception' %}
-        {% if workflowDetail.engineer == loginUser %}
+    {% if workflowDetail.status.status_code == 'wait' %}
+        {% if user.emial in workflowDetail.reviewer %}
+        <form action="/execute/" method="post" style="display:inline-block;">
+            {% csrf_token %}
+            <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
+            <input type="submit" id="btnExecute" type="button" onclick="execute()" class="btn btn-primary btn-default" data-loading-text="Loading..." value="审核通过，执行" />
+        </form>
+        {% endif %}
+        {% if user.email in workflowDetail.reviewer or user.email == workflowDetail.proposer %}
+        <form action="{% url 'inception_workflow_cancel' %}" method="post" style="display:inline-block;">
+            {% csrf_token %}
+            <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
+            <input type="submit" id="btnCancel" type="button" onclick="execute()" class="btn btn-default" data-loading-text="Loading..." value="终止流程" />
+        </form>
+        {% endif %}
+    {% elif workflowDetail.status.status_code == 'done' and workflowDetail.backup == '1' %}
+        <form action="/rollback/" method="get" style="display:inline-block;">
+            {% csrf_token %}
+            <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
+            <input type="submit" id="btnRollback" type="button" class="btn btn-default" data-loading-text="Loading..." value="查看回滚SQL" />
+        </form>
+    {% elif workflowDetail.status.status_code == 'reject' or workflowDetail.status.status_code == 'stop' or workflowDetail.status.status_code == 'exception' %}
+        {% if user.email in workflowDetail.reviewer or user.email == workflowDetail.proposer %}
+            <form action="{% url 'inception_workflow_cancel' %}" method="post" style="display:inline-block;">
+                {% csrf_token %}
+                <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
+                <input type="submit" id="btnCancel" type="button" onclick="execute()" class="btn btn-default" data-loading-text="Loading..." value="终止流程" />
+            </form>
+        {% endif %}
+        {% if workflowDetail.proposer == user.email %}
         <!--只允许发起人修改工单-->
             {% csrf_token %}
             <a type='button' id="btnEditSql" class='btn btn-warning' href="/editsql/">重新修改</a>

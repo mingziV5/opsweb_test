@@ -49,6 +49,13 @@
         {% endif %}
              <a href="{% url 'inception_workflow_list' %}?status=reject">自动审核不通过</a>
         </li>
+        {% if status == 'abort' %}
+        <li class="active">
+        {% else %}
+        <li>
+        {% endif %}
+             <a href="{% url 'inception_workflow_list' %}?status=abort">取消执行</a>
+        </li>
     </ul>
 
     <div class="tile-body color transparent-black rounded-corners">

@@ -7,6 +7,7 @@ from opsweb.utils import GetLogger
 
 import traceback
 import re
+import json
 
 class SqlDao(object):
     _chart_days = 90
@@ -215,3 +216,52 @@ class InceptionDao(object):
                     result = self._fetchall(sql_inception, paramHost=self.inception_host, paramPort=self.inception_port, paramUser='', paramPasswd='', paramDb='')
 
         return result
+
+    def sql_execute(self, workflow_detail, dict_conn):
+        '''
+                将sql交给inception进行最终执行，并返回执行结果。
+                '''
+        strBackup = ""
+        if workflow_detail.is_backup == '是':
+            strBackup = "--enable-remote-backup;"
+        else:
+            strBackup = "--disable-remote-backup;"
+
+        # 根据inception的要求，执行之前最好先split一下
+        sqlSplit = "/*--user=%s; --password=%s; --host=%s; --enable-execute;--port=%s; --enable-ignore-warnings;--enable-split;*/\
+                     inception_magic_start;\
+                     %s\
+                     inception_magic_commit;" % (
+        dict_conn['masterUser'], dict_conn['masterPassword'], dict_conn['masterHost'], str(dict_conn['masterPort']),
+        workflow_detail.sql_content)
+        splitResult = self._fetchall(sqlSplit, self.inception_host, self.inception_port, '', '', '')
+
+        tmpList = []
+        # 对于split好的结果，再次交给inception执行.这里无需保持在长连接里执行，短连接即可.
+        for splitRow in splitResult:
+            sqlTmp = splitRow[1]
+            sqlExecute = "/*--user=%s;--password=%s;--host=%s;--enable-execute;--port=%s; --enable-ignore-warnings;%s*/\
+                            inception_magic_start;\
+                            %s\
+                            inception_magic_commit;" % (
+            dict_conn['masterUser'], dict_conn['masterPassword'], dict_conn['masterHost'], str(dict_conn['masterPort']),
+            strBackup, sqlTmp)
+
+            executeResult = self._fetchall(sqlExecute, self.inception_host, self.inception_port, '', '', '')
+            for sqlRow in executeResult:
+                tmpList.append(sqlRow)
+            # 每执行一次，就将执行结果更新到工单的execute_result，便于获取osc进度时对比
+            workflow_detail.execute_result = json.dumps(tmpList)
+            workflow_detail.save()
+
+        # 二次加工一下，目的是为了和sqlautoReview()函数的return保持格式一致，便于在detail页面渲染.
+        finalStatus = "已正常结束"
+        finalList = []
+        for sqlRow in tmpList:
+            # 如果发现任何一个行执行结果里有errLevel为1或2，并且stagestatus列没有包含Execute Successfully字样，则判断最终执行结果为有异常.
+            if (sqlRow[2] == 1 or sqlRow[2] == 2) and re.match(r"\w*Execute Successfully\w*", sqlRow[3]) is None:
+                finalStatus = "执行有异常"
+            finalList.append(list(sqlRow))
+
+        return (finalStatus, finalList)
+

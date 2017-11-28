@@ -1,4 +1,4 @@
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, TemplateView, View
 from django.http import JsonResponse, QueryDict
 from .models import SqlWorkflow, MasterConfig, SqlWorkflowStatus
 from django.contrib.auth.models import Group
@@ -68,6 +68,66 @@ class WorkflowDetailView(TemplateView):
             listContent = json.loads(sql_wf_obj.review_content)
         context['listContent'] = listContent
         return context
+
+class WorkflowCancelView(View):
+    def post(self, request):
+        response = {}
+        workflow_id = request.POST.get('workflowid', None)
+        if not workflow_id:
+            response['status'] = 1
+            response['errmsg'] = '数据错误，workflow_id为空'
+            return JsonResponse(response)
+        workflow_id = int(workflow_id)
+        wf_obj = SqlWorkflow.objects.get(id=workflow_id)
+        reviewer = wf_obj.reviewer.split(',')
+        #服务器端验证，如果正在执行取消动作的当前登录用户不是发起人或者审核人，报异常
+        login_email = request.user.email
+        if login_email is None or (login_email not in reviewer and login_email != wf_obj.proposer ):
+            response['status'] = 1
+            response['errmsg'] = '当前登录用户不是审核人也不是发起人，请重新登录'
+            return JsonResponse(response)
+        #服务器端验证，如果工单是结束状态不能结束
+        if wf_obj.status.status_code in ('done', 'abort'):
+            response['status'] = 1
+            response['errmsg'] = '当前状态不能结束'
+            return JsonResponse(response)
+        try:
+            wf_status_obj = SqlWorkflowStatus.objects.get(status_code='abort')
+            wf_obj.status = wf_status_obj
+            wf_obj.save()
+        except:
+            response['status'] = 1
+            response['errmsg'] = '保存状态出错'
+            return JsonResponse(response)
+        response['status'] = 0
+        return JsonResponse(response)
+
+class WorkflowExecuteView(View):
+    def post(self, request):
+        response = {}
+        workflow_id = request.POST.get('', None)
+        if not workflow_id:
+            response['status'] = 1
+            response['errmsg'] = '数据错误，workflow_id为空'
+            return JsonResponse(response)
+        workflow_id = int(workflow_id)
+        wf_obj = SqlWorkflow.objects.get(id=workflow_id)
+        reviewer = wf_obj.reviewer.split(',')
+        login_email = request.user.email
+        #服务器端验证，当前登录用户能不能执行sql
+        if login_email is None or login_email not in reviewer:
+            response['status'] = 1
+            response['errmsg'] = '当前登录用户不是审核人，不能执行sql'
+            return JsonResponse(response)
+        #服务器端验证，如果工单不是待审核则不能执行
+        if wf_obj.status.status_code != 'wait':
+            response['status'] = 1
+            response['errmsg'] = '当前工单状态不能执行sql'
+            return JsonResponse(response)
+        #执行sql
+        pass
+
+
 
 class CreateWorkflowView(TemplateView):
     template_name = 'workflow_create.html'
@@ -178,6 +238,8 @@ class CreateWorkflowView(TemplateView):
         response['status'] = 1
         response['errmsg'] = '数据验证不通过,是否;结尾'
         return JsonResponse(response)
+
+
 
 
 

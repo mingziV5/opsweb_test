@@ -157,8 +157,8 @@
         </tbody>
     </table>
     {% if workflowDetail.status.status_code == 'wait' %}
-        {% if user.emial in workflowDetail.reviewer %}
-        <form action="/execute/" method="post" style="display:inline-block;">
+        {% if user.email in workflowDetail.reviewer %}
+        <form action="{% url 'inception_workflow_execute' %}" method="post" style="display:inline-block;">
             {% csrf_token %}
             <input type="hidden" name="workflowid" value="{{workflowDetail.id}}">
             <input type="submit" id="btnExecute" type="button" onclick="execute()" class="btn btn-primary btn-default" data-loading-text="Loading..." value="审核通过，执行" />

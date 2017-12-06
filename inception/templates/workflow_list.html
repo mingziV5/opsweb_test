@@ -19,7 +19,7 @@
         {% else %}
         <li>
         {% endif %}
-             <a href="{% url 'inception_workflow_list' %}?status=wait">待审核的</a>
+             <a href="{% url 'inception_workflow_list' %}?status=wait">待人工执行的</a>
         </li>
         {% if status == 'excute' %}
         <li class="active">
@@ -34,13 +34,6 @@
         <li>
         {% endif %}
              <a href="{% url 'inception_workflow_list' %}?status=done">已执行完毕</a>
-        </li>
-        {% if status == 'stop' %}
-        <li class="active">
-        {% else %}
-        <li>
-        {% endif %}
-             <a href="{% url 'inception_workflow_list' %}?status=stop">人工终止流程</a>
         </li>
         {% if status == 'reject' %}
         <li class="active">

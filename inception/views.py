@@ -6,7 +6,7 @@ from .form import AddSqlWorkflow, CheckWorkflow
 from opsweb.utils import GetLogger
 from inception import inception
 from inception.const import Const
-import traceback, json, re
+import traceback, json, re, time
 
 class ListWorkflowView(ListView):
     template_name = 'workflow_list.html'
@@ -124,10 +124,41 @@ class WorkflowExecuteView(View):
             response['status'] = 1
             response['errmsg'] = '当前工单状态不能执行sql'
             return JsonResponse(response)
-        #执行sql
-        pass
 
+        try:
+            # 修改工单状态，进入执行中
+            wf_obj.status = SqlWorkflowStatus.objects.get(status_code='excute')
+            wf_obj.review_time = getNow()
+            #执行之前需要重新split并check一遍，更新SHA1缓存，因为如果在执行中，其他进程去做这一步操作的话，会导致inception core dump
+            inception_obj = inception.InceptionDao()
+            sql_result = inception_obj.sql_auto_review(sql_content=wf_obj.sql_content, cluster_db_name=wf_obj.cluster_db_name, is_split=True)
+            wf_obj.review_content = json.dumps(sql_result)
+            wf_obj.save()
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '执行前check出错'
+            return JsonResponse(response)
 
+        try:
+            #执行sql executeStatus 0: 执行完成 1: 执行出先问题
+            (execute_status, final_list) = inception_obj.sql_execute(workflow_detail=wf_obj)
+
+            #将执行结果存入数据库，并更新状态
+            wf_obj.excute_result = json.dumps(final_list)
+            if execute_status == 1:
+                wf_obj.status = SqlWorkflowStatus.objects.get(status_code='exception')
+            else:
+                wf_obj.status = SqlWorkflowStatus.objects.get(status_code='done')
+            wf_obj.finish_time = getNow()
+            wf_obj.save()
+        except:
+            GetLogger().get_logger().error(traceback.format_exc())
+            response['status'] = 1
+            response['errmsg'] = '执行sql出错'
+            return JsonResponse(response)
+        response['status'] = 0
+        return JsonResponse(response)
 
 class CreateWorkflowView(TemplateView):
     template_name = 'workflow_create.html'
@@ -239,7 +270,6 @@ class CreateWorkflowView(TemplateView):
         response['errmsg'] = '数据验证不通过,是否;结尾'
         return JsonResponse(response)
 
-
-
-
+def getNow():
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 

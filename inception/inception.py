@@ -217,54 +217,53 @@ class InceptionDao(object):
 
         return result
 
-    def sql_execute(self, workflow_detail, cluster_db_name):
+    def sql_execute(self, workflow_obj):
         '''
             将sql交给inception进行最终执行，并返回执行结果。
         '''
         #提取执行目标库参数
-        cluster_name, db_name = cluster_db_name.split('->')
+        cluster_name, db_name = workflow_obj.cluster_db_name.split('->')
         master_db = MasterConfig.objects.get(Q(cluster_name=cluster_name) and Q(db_name=db_name))
         master_host = master_db.master_host
         master_port = master_db.master_port
         master_user = master_db.master_user
         master_password = master_db.master_passwd
 
-        strBackup = ""
-        if workflow_detail.backup == '1':
-            strBackup = "--enable-remote-backup;"
+        str_backup = ""
+        if workflow_obj.backup == '1':
+            str_backup = "--enable-remote-backup;"
         else:
-            strBackup = "--disable-remote-backup;"
+            str_backup = "--disable-remote-backup;"
 
         # 根据inception的要求，执行之前最好先split一下
-        sqlSplit = "/*--user=%s; --password=%s; --host=%s; --enable-execute;--port=%s; --enable-ignore-warnings; --enable-split;*/\
+        sql_split = "/*--user=%s; --password=%s; --host=%s; --enable-execute;--port=%s; --enable-ignore-warnings; --enable-split;*/\
                      inception_magic_start;\
                      %s\
-                     inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),workflow_detail.sql_content)
-        splitResult = self._fetchall(sqlSplit, self.inception_host, self.inception_port, '', '', '')
+                     inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),workflow_obj.sql_content)
+        split_result = self._fetchall(sql_split, self.inception_host, self.inception_port, '', '', '')
 
-        tmpList = []
+        tmp_list = []
         # 对于split好的结果，再次交给inception执行.这里无需保持在长连接里执行，短连接即可.
-        for splitRow in splitResult:
-            sqlTmp = splitRow[1]
-            sqlExecute = "/*--user=%s;--password=%s;--host=%s;--enable-execute;--port=%s; --enable-ignore-warnings; %s*/\
+        for split_row in split_result:
+            sql = split_row[1]
+            sql_execute = "/*--user=%s;--password=%s;--host=%s;--enable-execute;--port=%s; --enable-ignore-warnings; %s*/\
                             inception_magic_start;\
                             %s\
-                            inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),strBackup, sqlTmp)
-            executeResult = self._fetchall(sqlExecute, self.inception_host, self.inception_port, '', '', '')
-            for sqlRow in executeResult:
-                tmpList.append(sqlRow)
+                            inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),str_backup, sql)
+            execute_result = self._fetchall(sql_execute, self.inception_host, self.inception_port, '', '', '')
+            for sqlResult in execute_result:
+                tmp_list.append(sqlResult)
             # 每执行一次，就将执行结果更新到工单的execute_result，便于获取osc进度时对比
-            workflow_detail.execute_result = json.dumps(tmpList)
-            workflow_detail.save()
+            workflow_obj.execute_result = json.dumps(tmp_list)
+            workflow_obj.save()
 
         # 二次加工一下，目的是为了和sqlautoReview()函数的return保持格式一致，便于在detail页面渲染.
-        finalStatus = "已正常结束"
-        finalList = []
-        for sqlRow in tmpList:
+        final_status = 0
+        final_list = []
+        for sql_row in tmp_list:
             # 如果发现任何一个行执行结果里有errLevel为1或2，并且stagestatus列没有包含Execute Successfully字样，则判断最终执行结果为有异常.
-            if (sqlRow[2] == 1 or sqlRow[2] == 2) and re.match(r"\w*Execute Successfully\w*", sqlRow[3]) is None:
-                finalStatus = "执行有异常"
-            finalList.append(list(sqlRow))
-
-        return (finalStatus, finalList)
+            if (sql_row[2] == 1 or sql_row[2] == 2) and re.match(r"\w*Execute Successfully\w*", sql_row[3]) is None:
+                final_status = 1
+                final_list.append(list(sql_row))
+        return (final_status, final_list)
 

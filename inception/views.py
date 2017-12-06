@@ -105,7 +105,7 @@ class WorkflowCancelView(View):
 class WorkflowExecuteView(View):
     def post(self, request):
         response = {}
-        workflow_id = request.POST.get('', None)
+        workflow_id = request.POST.get('workflowid', None)
         if not workflow_id:
             response['status'] = 1
             response['errmsg'] = '数据错误，workflow_id为空'
@@ -142,10 +142,10 @@ class WorkflowExecuteView(View):
 
         try:
             #执行sql executeStatus 0: 执行完成 1: 执行出先问题
-            (execute_status, final_list) = inception_obj.sql_execute(workflow_detail=wf_obj)
+            (execute_status, final_list) = inception_obj.sql_execute(wf_obj)
 
             #将执行结果存入数据库，并更新状态
-            wf_obj.excute_result = json.dumps(final_list)
+            wf_obj.execute_result = json.dumps(final_list)
             if execute_status == 1:
                 wf_obj.status = SqlWorkflowStatus.objects.get(status_code='exception')
             else:

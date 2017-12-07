@@ -63,7 +63,7 @@ class WorkflowDetailView(TemplateView):
             except:
                 return 'error'
         if sql_wf_obj.status.status_code in ('done', 'exception'):
-            listContent = json.loads(sql_wf_obj.excute_result)
+            listContent = json.loads(sql_wf_obj.execute_result)
         else:
             listContent = json.loads(sql_wf_obj.review_content)
         context['listContent'] = listContent
@@ -73,6 +73,7 @@ class WorkflowCancelView(View):
     def post(self, request):
         response = {}
         workflow_id = request.POST.get('workflowid', None)
+        wf_status = Const.workflow_status.get('abort')
         if not workflow_id:
             response['status'] = 1
             response['errmsg'] = '数据错误，workflow_id为空'
@@ -87,12 +88,12 @@ class WorkflowCancelView(View):
             response['errmsg'] = '当前登录用户不是审核人也不是发起人，请重新登录'
             return JsonResponse(response)
         #服务器端验证，如果工单是结束状态不能结束
-        if wf_obj.status.status_code in ('done', 'abort'):
+        if wf_obj.status.status_name in (Const.workflow_status.get('done'), Const.workflow_status.get('abort')):
             response['status'] = 1
             response['errmsg'] = '当前状态不能结束'
             return JsonResponse(response)
         try:
-            wf_status_obj = SqlWorkflowStatus.objects.get(status_code='abort')
+            wf_status_obj = SqlWorkflowStatus.objects.get(status_name=wf_status)
             wf_obj.status = wf_status_obj
             wf_obj.save()
         except:
@@ -106,6 +107,7 @@ class WorkflowExecuteView(View):
     def post(self, request):
         response = {}
         workflow_id = request.POST.get('workflowid', None)
+        wf_status = Const.workflow_status.get('execute')
         if not workflow_id:
             response['status'] = 1
             response['errmsg'] = '数据错误，workflow_id为空'
@@ -127,7 +129,7 @@ class WorkflowExecuteView(View):
 
         try:
             # 修改工单状态，进入执行中
-            wf_obj.status = SqlWorkflowStatus.objects.get(status_code='excute')
+            wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
             wf_obj.review_time = getNow()
             #执行之前需要重新split并check一遍，更新SHA1缓存，因为如果在执行中，其他进程去做这一步操作的话，会导致inception core dump
             inception_obj = inception.InceptionDao()
@@ -147,9 +149,11 @@ class WorkflowExecuteView(View):
             #将执行结果存入数据库，并更新状态
             wf_obj.execute_result = json.dumps(final_list)
             if execute_status == 1:
-                wf_obj.status = SqlWorkflowStatus.objects.get(status_code='exception')
+                wf_status = Const.workflow_status.get('exception')
+                wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
             else:
-                wf_obj.status = SqlWorkflowStatus.objects.get(status_code='done')
+                wf_status = Const.workflow_status.get('done')
+                wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
             wf_obj.finish_time = getNow()
             wf_obj.save()
         except:
@@ -169,7 +173,9 @@ class CreateWorkflowView(TemplateView):
         context['dbs'] = MasterConfig.objects.values('cluster_name', 'db_name')
         dba_group = Group.objects.get(name='dba')
         login_user = self.request.user
-        context['dbas'] = dba_group.user_set.all().exclude(username=login_user.username)
+        #context['dbas'] = dba_group.user_set.all().exclude(username=login_user.username)
+        #测试 可以选择自己
+        context['dbas'] = dba_group.user_set.all()
         return context
 
     def check(self, request):
@@ -200,7 +206,6 @@ class CreateWorkflowView(TemplateView):
     def post(self, request):
         response = {}
         workflow_form = AddSqlWorkflow(request.POST)
-        print(request.POST)
         if workflow_form.is_valid():
             workflow_form_dict = workflow_form.cleaned_data
             workflow_name = workflow_form_dict.get('workflow_name')
@@ -256,6 +261,7 @@ class CreateWorkflowView(TemplateView):
                 GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '获取工单初始状态出错'
+                return JsonResponse(response)
             try:
                 sql_obj = SqlWorkflow(workflow_name=workflow_name, reviewer=reviewer, backup=backup, is_split=is_split,cluster_db_name=cluster_db_name, sql_content=sql_content,
                                       review_content=review_content, proposer=proposer, status=status)
@@ -266,6 +272,7 @@ class CreateWorkflowView(TemplateView):
                 GetLogger().get_logger().error(traceback.format_exc())
                 response['status'] = 1
                 response['errmsg'] = '新建工单出错'
+                return JsonResponse(response)
         response['status'] = 1
         response['errmsg'] = '数据验证不通过,是否;结尾'
         return JsonResponse(response)

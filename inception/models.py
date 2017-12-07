@@ -35,7 +35,7 @@ class SqlWorkflow(models.Model):
     review_content = models.TextField('自动审核返回的JSON', null=True)
     cluster_db_name = models.CharField('执行目标库', max_length=200)
     sql_content = models.TextField('具体执行内容')
-    excute_result = models.TextField('执行结果返回的JSON', null=True)
+    execute_result = models.TextField('执行结果返回的JSON', null=True)
 
     def __str__(self):
         return self.workflow_name

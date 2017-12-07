@@ -103,6 +103,15 @@ class WorkflowCancelView(View):
         response['status'] = 0
         return JsonResponse(response)
 
+class WorkflowRollBackView(View):
+
+    def post(self, request):
+        response = {}
+        workflow_id = request.POST.get('workflowid', None)
+        #TODO 完成查看回滚sql
+        pass
+
+
 class WorkflowExecuteView(View):
     def post(self, request):
         response = {}
@@ -145,12 +154,11 @@ class WorkflowExecuteView(View):
         try:
             #执行sql executeStatus 0: 执行完成 1: 执行出先问题
             (execute_status, final_list) = inception_obj.sql_execute(wf_obj)
-
+            wf_obj.execute_result = json.dumps(final_list)
             #将执行结果存入数据库，并更新状态
             if execute_status == 1:
                 wf_status = Const.workflow_status.get('exception')
                 wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
-                wf_obj.execute_result = json.dumps(final_list)
             else:
                 wf_status = Const.workflow_status.get('done')
                 wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)

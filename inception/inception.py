@@ -261,11 +261,35 @@ class InceptionDao(object):
         # 二次加工一下，目的是为了和sqlautoReview()函数的return保持格式一致，便于在detail页面渲染.
         final_status = 0
         final_list = []
+        #判断执行是否出现异常
         for sql_row in tmp_list:
             # 如果发现任何一个行执行结果里有errLevel为1或2，并且stagestatus列没有包含Execute Successfully字样，则判断最终执行结果为有异常.
             if (sql_row[2] == 1 or sql_row[2] == 2) and re.match(r"\w*Execute Successfully\w*", sql_row[3]) is None:
                 final_status = 1
-                final_list.append(list(sql_row))
+            final_list.append(list(sql_row))
 
         return (final_status, final_list)
 
+    def get_roll_back_sql(self, workflow_obj):
+        execute_result_list = json.load(workflow_obj.execute_result)
+        roll_back_sql = []
+        for row in execute_result_list:
+            # 获取backup_db_name
+            if row[8] == 'None':
+                continue;
+            backup_db_name = row[8]
+            op_id = row[7].replace("'", "")
+            sql_table = "select tablename from %s.$_$Inception_backup_information$_$ where opid_time='%s';" %(backup_db_name, op_id)
+            tables_list = self._fetchall(sql_table, self.inception_remote_backup_host, self.inception_remote_backup_port,
+                                        self.inception_remote_backup_user, self.inception_remote_backup_password, '')
+            if tables_list is None or len(tables_list) != 1:
+                print("Error: returned tables_list more than 1 or None")
+
+            table_name = tables_list[0][0]
+            sql_roll_back = "select rollback_statement from %s.%s where opid_time='%s'" % (backup_db_name, table_name, op_id)
+            list_backup_result = self._fetchall(sql_roll_back, self.inception_remote_backup_host, self.inception_remote_backup_port,
+                                        self.inception_remote_backup_user, self.inception_remote_backup_password, '')
+            if list_backup_result is not None and len(list_backup_result) != 0:
+                for row in range(len(list_backup_result)):
+                    roll_back_sql.append(list_backup_result[row][0])
+        return roll_back_sql

@@ -147,10 +147,10 @@ class WorkflowExecuteView(View):
             (execute_status, final_list) = inception_obj.sql_execute(wf_obj)
 
             #将执行结果存入数据库，并更新状态
-            wf_obj.execute_result = json.dumps(final_list)
             if execute_status == 1:
                 wf_status = Const.workflow_status.get('exception')
                 wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
+                wf_obj.execute_result = json.dumps(final_list)
             else:
                 wf_status = Const.workflow_status.get('done')
                 wf_obj.status = SqlWorkflowStatus.objects.get(status_name=wf_status)
@@ -184,7 +184,6 @@ class CreateWorkflowView(TemplateView):
         checkflow_form = CheckWorkflow(data)
         if checkflow_form.is_valid():
             checkflow_form_dict = checkflow_form.cleaned_data
-            print(checkflow_form_dict)
             sql_content = checkflow_form_dict.get('sql_content')
             cluster_db_name = checkflow_form_dict.get('cluster_db_name')
             is_split = checkflow_form_dict.get('is_split')

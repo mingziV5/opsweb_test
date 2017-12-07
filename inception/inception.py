@@ -251,6 +251,7 @@ class InceptionDao(object):
                             %s\
                             inception_magic_commit;" % (master_user, master_password, master_host, str(master_port),str_backup, sql)
             execute_result = self._fetchall(sql_execute, self.inception_host, self.inception_port, '', '', '')
+
             for sqlResult in execute_result:
                 tmp_list.append(sqlResult)
             # 每执行一次，就将执行结果更新到工单的execute_result，便于获取osc进度时对比
@@ -265,5 +266,6 @@ class InceptionDao(object):
             if (sql_row[2] == 1 or sql_row[2] == 2) and re.match(r"\w*Execute Successfully\w*", sql_row[3]) is None:
                 final_status = 1
                 final_list.append(list(sql_row))
+
         return (final_status, final_list)
 

@@ -10,6 +10,8 @@ class Idc(models.Model):
     contact = models.CharField("机房联系人", max_length=32, null=True)
 
     class Meta:
+        verbose_name = 'idc机房'
+        verbose_name_plural = verbose_name
         db_table = "resources_idc"
         ordering = ['id']
 

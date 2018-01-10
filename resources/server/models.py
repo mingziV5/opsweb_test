@@ -4,6 +4,10 @@ from resources.idc.models import Idc
 class ServerStatus(models.Model):
     name = models.CharField(max_length=20)
 
+    class Meta:
+        verbose_name = '服务器状态'
+        verbose_name_plural = verbose_name
+
 class Server(models.Model):
     supplier = models.IntegerField(null=True)
     manufacturers = models.CharField(max_length=50, null=True)
@@ -32,5 +36,7 @@ class Server(models.Model):
         return self.hostname
 
     class Meta:
+        verbose_name = '服务器'
+        verbose_name_plural = verbose_name
         db_table = 'resources_server'
         ordering = ['id']

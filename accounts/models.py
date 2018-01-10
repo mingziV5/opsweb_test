@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 # Create your models here.
 class Person(models.Model):
     #username varchar(32) notnull, null存数据库范畴，blank是数据验证范畴，表单验证
@@ -16,6 +17,7 @@ class Person(models.Model):
         #该模型所用的数据表的名称，强烈推荐使用小写
         db_table = "person"
 
+#扩展user表 one2one
 class UserProfile(models.Model):
     user = models.OneToOneField(User, verbose_name='与User模型一对一对应')
     name = models.CharField('中文名称', max_length=32)
@@ -23,3 +25,16 @@ class UserProfile(models.Model):
 
     class Meta:
         ordering = ['id']
+
+#扩展user表 AbstractUser
+'''
+class UserProfile(AbstractUser):
+    name = models.CharField('中文名', max_length=30)
+    phone = models.CharField('手机号', max_length=11, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'UserProfile'
+
+    def __unicode__(self):
+        return self.username
+'''

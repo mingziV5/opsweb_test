@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'inception',
 ]
 
+#自定义用户model
+#AUTH_USER_MODEL='user.UserProfile'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

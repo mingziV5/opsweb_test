@@ -8,6 +8,8 @@ class Product(models.Model):
     pid = models.IntegerField('上级业务线id', db_index=True)
 
     class Meta:
+        verbose_name = '业务线'
+        verbose_name_plural = verbose_name
         ordering = ['pid']
 
     def __str__(self):
